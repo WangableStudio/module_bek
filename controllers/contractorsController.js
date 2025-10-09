@@ -1,6 +1,18 @@
 const ApiError = require("../error/ApiError");
 const { Contractors, User } = require("../models/models");
 
+function validateINN(inn) {
+  if (!inn) return false;
+  const innStr = inn.toString().trim();
+  if (innStr.length === 10 || innStr.length === 12) {
+    return /^\d+$/.test(innStr);
+  }
+  return false;
+}
+
+function validateBankDetails(accountNumber, bik) {
+  return accountNumber && accountNumber.length >= 20 && bik && bik.length === 9;
+}
 class ContractorsController {
   async create(req, res, next) {
     try {
@@ -22,7 +34,7 @@ class ContractorsController {
         assets,
         primaryActivities,
         comment,
-        
+
         // Адреса
         legalAddress,
         actualAddress,
@@ -30,7 +42,7 @@ class ContractorsController {
         zip,
         city,
         country,
-        
+
         // Банковские реквизиты
         bankName,
         bankAccount,
@@ -38,7 +50,7 @@ class ContractorsController {
         bankCorrespondentAccount,
         bankKbk,
         bankOktmo,
-        
+
         // Руководитель
         ceoFirstName,
         ceoLastName,
@@ -51,29 +63,50 @@ class ContractorsController {
         ceoIssuedBy,
         ceoAddress,
         ceoPhone,
-        ceoCountry
+        ceoCountry,
       } = req.body;
 
       // Проверка обязательных полей
       const requiredFields = [
-        'type', 'name', 'fullName', 'billingDescriptor', 'inn', 'ogrn',
-        'email', 'phone', 'siteUrl', 'legalAddress', 'zip', 'city', 'country',
-        'bankName', 'bankAccount', 'bankBik', 'ceoFirstName', 'ceoLastName',
-        'ceoAddress', 'ceoPhone', 'ceoCountry'
+        "type",
+        "name",
+        "fullName",
+        "billingDescriptor",
+        "inn",
+        "ogrn",
+        "email",
+        "phone",
+        "siteUrl",
+        "legalAddress",
+        "zip",
+        "city",
+        "country",
+        "bankName",
+        "bankAccount",
+        "bankBik",
+        "ceoFirstName",
+        "ceoLastName",
+        "ceoAddress",
+        "ceoPhone",
+        "ceoCountry",
       ];
 
-      const missingFields = requiredFields.filter(field => !req.body[field]);
+      const missingFields = requiredFields.filter((field) => !req.body[field]);
       if (missingFields.length > 0) {
-        return next(ApiError.badRequest(`Заполните обязательные поля: ${missingFields.join(', ')}`));
+        return next(
+          ApiError.badRequest(
+            `Заполните обязательные поля: ${missingFields.join(", ")}`
+          )
+        );
       }
 
       // Валидация ИНН
-      if (!this.validateINN(inn)) {
+      if (!validateINN(inn)) {
         return next(ApiError.badRequest("Некорректный ИНН"));
       }
 
       // Валидация банковских реквизитов
-      if (!this.validateBankDetails(bankAccount, bankBik)) {
+      if (!validateBankDetails(bankAccount, bankBik)) {
         return next(ApiError.badRequest("Некорректные банковские реквизиты"));
       }
 
@@ -89,7 +122,7 @@ class ContractorsController {
         billingDescriptor,
         inn,
         ogrn,
-        kpp: kpp || '000000000',
+        kpp: kpp || "000000000",
         okved,
         email,
         phone,
@@ -99,15 +132,15 @@ class ContractorsController {
         assets,
         primaryActivities,
         comment,
-        
+
         // Адреса
         legalAddress,
         actualAddress,
         postalAddress,
         zip,
         city,
-        country: country || 'RUS',
-        
+        country: country || "RUS",
+
         // Банковские реквизиты
         bankName,
         bankAccount,
@@ -115,7 +148,7 @@ class ContractorsController {
         bankCorrespondentAccount,
         bankKbk,
         bankOktmo,
-        
+
         // Руководитель
         ceoFirstName,
         ceoLastName,
@@ -128,7 +161,7 @@ class ContractorsController {
         ceoIssuedBy,
         ceoAddress,
         ceoPhone,
-        ceoCountry: ceoCountry || 'RUS'
+        ceoCountry: ceoCountry || "RUS",
       });
 
       return res.json(contractor);
@@ -142,10 +175,21 @@ class ContractorsController {
     try {
       const contractors = await Contractors.findAll({
         attributes: [
-          'id', 'type', 'name', 'fullName', 'inn', 'ogrn', 'kpp', 
-          'email', 'phone', 'bankName', 'bankAccount', 'partnerId',
-          'createdAt', 'updatedAt'
-        ]
+          "id",
+          "type",
+          "name",
+          "fullName",
+          "inn",
+          "ogrn",
+          "kpp",
+          "email",
+          "phone",
+          "bankName",
+          "bankAccount",
+          "partnerId",
+          "createdAt",
+          "updatedAt",
+        ],
       });
       return res.json(contractors);
     } catch (err) {
@@ -194,7 +238,7 @@ class ContractorsController {
         assets,
         primaryActivities,
         comment,
-        
+
         // Адреса
         legalAddress,
         actualAddress,
@@ -202,7 +246,7 @@ class ContractorsController {
         zip,
         city,
         country,
-        
+
         // Банковские реквизиты
         bankName,
         bankAccount,
@@ -210,7 +254,7 @@ class ContractorsController {
         bankCorrespondentAccount,
         bankKbk,
         bankOktmo,
-        
+
         // Руководитель
         ceoFirstName,
         ceoLastName,
@@ -223,19 +267,22 @@ class ContractorsController {
         ceoIssuedBy,
         ceoAddress,
         ceoPhone,
-        ceoCountry
+        ceoCountry,
       } = req.body;
 
       // Валидация ИНН если передан
-      if (inn && !this.validateINN(inn)) {
+      if (inn && !validateINN(inn)) {
         return next(ApiError.badRequest("Некорректный ИНН"));
       }
 
       // Валидация банковских реквизитов если переданы
-      if ((bankAccount || bankBik) && !this.validateBankDetails(
-        bankAccount || contractor.bankAccount, 
-        bankBik || contractor.bankBik
-      )) {
+      if (
+        (bankAccount || bankBik) &&
+        !validateBankDetails(
+          bankAccount || contractor.bankAccount,
+          bankBik || contractor.bankBik
+        )
+      ) {
         return next(ApiError.badRequest("Некорректные банковские реквизиты"));
       }
 
@@ -258,7 +305,7 @@ class ContractorsController {
         assets: assets ?? contractor.assets,
         primaryActivities: primaryActivities ?? contractor.primaryActivities,
         comment: comment ?? contractor.comment,
-        
+
         // Адреса
         legalAddress: legalAddress ?? contractor.legalAddress,
         actualAddress: actualAddress ?? contractor.actualAddress,
@@ -266,15 +313,16 @@ class ContractorsController {
         zip: zip ?? contractor.zip,
         city: city ?? contractor.city,
         country: country ?? contractor.country,
-        
+
         // Банковские реквизиты
         bankName: bankName ?? contractor.bankName,
         bankAccount: bankAccount ?? contractor.bankAccount,
         bankBik: bankBik ?? contractor.bankBik,
-        bankCorrespondentAccount: bankCorrespondentAccount ?? contractor.bankCorrespondentAccount,
+        bankCorrespondentAccount:
+          bankCorrespondentAccount ?? contractor.bankCorrespondentAccount,
         bankKbk: bankKbk ?? contractor.bankKbk,
         bankOktmo: bankOktmo ?? contractor.bankOktmo,
-        
+
         // Руководитель
         ceoFirstName: ceoFirstName ?? contractor.ceoFirstName,
         ceoLastName: ceoLastName ?? contractor.ceoLastName,
@@ -287,7 +335,7 @@ class ContractorsController {
         ceoIssuedBy: ceoIssuedBy ?? contractor.ceoIssuedBy,
         ceoAddress: ceoAddress ?? contractor.ceoAddress,
         ceoPhone: ceoPhone ?? contractor.ceoPhone,
-        ceoCountry: ceoCountry ?? contractor.ceoCountry
+        ceoCountry: ceoCountry ?? contractor.ceoCountry,
       });
 
       // Перезагружаем обновленные данные
@@ -314,19 +362,7 @@ class ContractorsController {
     }
   }
 
-  // Вспомогательные методы валидации
-  validateINN(inn) {
-    if (!inn) return false;
-    const innStr = inn.toString().trim();
-    if (innStr.length === 10 || innStr.length === 12) {
-      return /^\d+$/.test(innStr);
-    }
-    return false;
-  }
-
-  validateBankDetails(accountNumber, bik) {
-    return accountNumber && accountNumber.length >= 20 && bik && bik.length === 9;
-  }
+  // Вспомогательные методы
 }
 
 module.exports = new ContractorsController();
