@@ -1,35 +1,40 @@
 const ApiError = require("../error/ApiError");
-const { User } = require("../models/models");
+const { User, Contractors, Payment } = require("../models/models");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const axios = require("axios");
 const TINKOFF_TERMINAL_KEY = "1759332525322";
+const TINKOFF_TERMINAL_KEY_E2C = "1759332525322E2C"; // для выплат
 const TINKOFF_PASSWORD = "gP3PIYw*xe5L#$9G";
 
 const generateJwt = (id, name, login) => {
   const payload = { id, name, login };
   return jwt.sign(payload, process.env.SECRET_KEY, { expiresIn: "24h" });
 };
+function createTinkoffToken(payload, password) {
+  const filtered = {};
+  for (const key in payload) {
+    if (typeof payload[key] !== "object") {
+      filtered[key] = payload[key];
+    }
+  }
 
-function generateTinkoffToken(params, password) {
-  const filtered = Object.entries(params)
-    .filter(
-      ([key, val]) => key !== "Token" && val !== undefined && val !== null
-    )
-    .reduce((acc, [key, val]) => {
-      if (typeof val === "object" && !Array.isArray(val)) {
-        Object.entries(val).forEach(([subKey, subVal]) => {
-          acc[subKey] = subVal;
-        });
-      } else acc[key] = val;
-      return acc;
-    }, {});
+  filtered.Password = password;
 
-  const sorted = Object.keys(filtered).sort();
-  const concatenated = sorted.map((k) => filtered[k]).join("") + password;
+  // 3️⃣ Сортируем по ключам в алфавитном порядке
+  const sortedKeys = Object.keys(filtered).sort();
 
-  return crypto.createHash("sha256").update(concatenated).digest("hex");
+  // 4️⃣ Склеиваем значения в одну строку
+  const concatenated = sortedKeys.map((key) => String(filtered[key])).join("");
+  console.log(concatenated);
+  // 5️⃣ Вычисляем SHA-256 хеш
+  const token = crypto
+    .createHash("sha256")
+    .update(concatenated, "utf8")
+    .digest("hex");
+
+  return token;
 }
 
 class UserController {
@@ -67,51 +72,152 @@ class UserController {
         items,
         totalAmount,
       } = req.body;
+
+      if (!contractor?.id) {
+        return next(ApiError.badRequest("Подрядчик не указан"));
+      }
+
+      const contractorRecord = await Contractors.findByPk(contractor.id);
+      if (!contractorRecord) {
+        return next(ApiError.badRequest("Подрядчик не найден"));
+      }
+
+      const cleanedPhone = contractorRecord.phone.replace(/[^\d+]/g, "");
       const orderId = `order-${Date.now()}`;
-      const amountInKopecks = totalAmount * 100;
+      const amountInKopecks = Math.round(totalAmount * 100);
+
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY,
         Amount: amountInKopecks,
         OrderId: orderId,
         Description: `Оплата услуг: ${contractor.name}`,
         CreateDealWithType: "NN",
+        PaymentRecipientId: cleanedPhone,
+        NotificationURL: `${process.env.BACKEND_URL}/api/v1/user/notification`,
         DATA: {
           companyAmount,
           contractorAmount,
           commission,
         },
       };
-      const token = generateTinkoffToken(payload, TINKOFF_PASSWORD);
-      payload.Token = token;
-      const { data } = await axios.post(
+
+      // Добавляем токен
+      payload.Token = createTinkoffToken(payload, TINKOFF_PASSWORD);
+
+      console.log("[TINKOFF] Payload:", payload);
+
+      const response = await axios.post(
         "https://rest-api-test.tinkoff.ru/v2/Init",
-        payload
+        payload,
+        { headers: { "Content-Type": "application/json" } }
       );
-      console.log('====================');
-      console.log(data);
-      console.log('====================');
-      
-      if (data.Success) {
-        return res.json({
-          success: true,
-          paymentUrl: data.PaymentURL,
-          dealId: data.Deal?.DealId || null,
-          orderId,
-        });
-      } else {
-        console.error("Ошибка от Tinkoff:", data);
+
+      const data = response.data;
+      console.log("[TINKOFF RESPONSE]", data);
+
+      if (!data.Success) {
+        console.error("[TINKOFF ERROR]", data);
         return res.status(400).json({ success: false, data });
       }
+
+      const payment = await Payment.create({
+        id: data.PaymentId,
+        orderId,
+        paymentUrl: data.PaymentURL,
+        status: data.Status,
+        contractorId: contractorRecord.id,
+        commission,
+        companyAmount,
+        contractorAmount,
+        totalAmount,
+        items,
+        responseData: data,
+        dealId: data.SpAccumulationId || null,
+      });
+
+      console.log("[PAYMENT SAVED]", payment);
+
+      return res.json({
+        success: true,
+        paymentUrl: data.PaymentURL,
+        orderId,
+        status: data.Status,
+        paymentId: data.PaymentId,
+      });
     } catch (err) {
-      console.log(err);
-      next(ApiError.internal("Ошибка при создании ссылки"));
+      console.error("[TINKOFF EXCEPTION]", err);
+      return next(ApiError.internal("Ошибка при создании платёжной ссылки"));
+    }
+  }
+
+  async handleNotification(req, res, next) {
+    try {
+      const notification = req.body;
+      console.log("[NOTIFICATION RECEIVED]", notification);
+
+      // Проверяем подпись
+      const receivedToken = notification.Token;
+      delete notification.Token;
+      const expectedToken = createTinkoffToken(notification, TINKOFF_PASSWORD);
+
+      if (receivedToken !== expectedToken) {
+        console.error("[NOTIFICATION] Invalid token!");
+        return res.status(400).send("Invalid token");
+      }
+
+      // Находим платеж
+      const payment = await Payment.findByPk(notification.PaymentId);
+      if (!payment) {
+        console.error(
+          "[NOTIFICATION] Payment not found:",
+          notification.PaymentId
+        );
+        return res.status(404).send("Payment not found");
+      }
+
+      // Обновляем статус
+      payment.status = notification.Status;
+
+      // Сохраняем DealId (SpAccumulationId) - ОН ОЧЕНЬ ВАЖЕН! (если есть, для будущих splits)
+      if (notification.SpAccumulationId) {
+        payment.dealId = notification.SpAccumulationId;
+      }
+
+      await payment.save();
+
+      console.log(
+        "[NOTIFICATION] Payment updated:",
+        payment.id,
+        payment.status
+      );
+
+      // Обрабатываем статусы (только логи для теста)
+      switch (notification.Status) {
+        case "AUTHORIZED":
+          console.log("[NOTIFICATION] Payment authorized (test: no confirm)");
+          // await confirmPayment(payment); // Закомментировано для теста
+          break;
+
+        case "CONFIRMED":
+          console.log("[NOTIFICATION] Payment confirmed (test: no payouts)");
+          // await initiatePayouts(payment); // Закомментировано для теста
+          break;
+
+        case "REJECTED":
+          console.error("[NOTIFICATION] Payment rejected!");
+          break;
+      }
+
+      return res.send("OK");
+    } catch (err) {
+      console.error("[NOTIFICATION ERROR]", err);
+      return res.status(500).send("Internal error");
     }
   }
 
   async login(req, res, next) {
     try {
       const { login, password } = req.body;
-      console.log(login, password);
 
       if (!login || !password) {
         return next(ApiError.badRequest("Введите логин и пароль"));
