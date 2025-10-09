@@ -64,13 +64,13 @@ class PaymentController {
       }
 
       // Для СБП регистрируем подрядчика только если нужно (не требуется для физлиц)
-      if (
-        !contractorRecord.partnerId &&
-        contractorRecord.type !== CONTRACTOR_TYPES.INDIVIDUAL
-      ) {
-        await this.registerContractor(contractorRecord);
-        await contractorRecord.reload();
-      }
+    //   if (
+    //     !contractorRecord.partnerId &&
+    //     contractorRecord.type !== CONTRACTOR_TYPES.INDIVIDUAL
+    //   ) {
+    //     await this.registerContractor(contractorRecord);
+    //     await contractorRecord.reload();
+    //   }
 
       const cleanedPhone = contractorRecord.phone.replace(/[^\d+]/g, "");
       const orderId = `order-${Date.now()}`;
