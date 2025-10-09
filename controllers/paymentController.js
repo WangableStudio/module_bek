@@ -1,6 +1,11 @@
 const crypto = require("crypto");
 const axios = require("axios");
-const { Payment, Contractors, Payout, CONTRACTOR_TYPES } = require("../models/models");
+const {
+  Payment,
+  Contractors,
+  Payout,
+  CONTRACTOR_TYPES,
+} = require("../models/models");
 const ApiError = require("../error/ApiError");
 
 const {
@@ -19,28 +24,24 @@ const TINKOFF_API_URL =
     ? "https://securepay.tinkoff.ru"
     : "https://rest-api-test.tinkoff.ru";
 
-class PaymentController {
-  createTinkoffToken(payload, password = TINKOFF_PASSWORD) {
-    const filtered = {};
-    for (const key in payload) {
-      if (
-        typeof payload[key] !== "object" &&
-        payload[key] !== undefined &&
-        payload[key] !== null
-      ) {
-        filtered[key] = payload[key];
-      }
+function createTinkoffToken(payload, password = TINKOFF_PASSWORD) {
+  const filtered = {};
+  for (const key in payload) {
+    if (
+      typeof payload[key] !== "object" &&
+      payload[key] !== undefined &&
+      payload[key] !== null
+    ) {
+      filtered[key] = payload[key];
     }
-
-    filtered.Password = password;
-    const sortedKeys = Object.keys(filtered).sort();
-    const concatenated = sortedKeys.map((k) => String(filtered[k])).join("");
-    return crypto
-      .createHash("sha256")
-      .update(concatenated, "utf8")
-      .digest("hex");
   }
 
+  filtered.Password = password;
+  const sortedKeys = Object.keys(filtered).sort();
+  const concatenated = sortedKeys.map((k) => String(filtered[k])).join("");
+  return crypto.createHash("sha256").update(concatenated, "utf8").digest("hex");
+}
+class PaymentController {
   // 🧩 Создание платёжной ссылки
   async init(req, res, next) {
     try {
@@ -91,7 +92,7 @@ class PaymentController {
         },
       };
 
-      payload.Token = this.createTinkoffToken(payload);
+      payload.Token = createTinkoffToken(payload);
 
       console.log("[TINKOFF INIT] Request:", JSON.stringify(payload, null, 2));
 
@@ -191,7 +192,7 @@ class PaymentController {
       // Убираем пустые поля
       this.cleanPayload(payload);
 
-      payload.token = this.createTinkoffToken(payload);
+      payload.token = createTinkoffToken(payload);
 
       console.log(
         "[TINKOFF REGISTER PARTNER] Request:",
@@ -385,7 +386,7 @@ class PaymentController {
       const receivedToken = notification.Token;
       delete notification.Token;
 
-      const expectedToken = this.createTinkoffToken(notification);
+      const expectedToken = createTinkoffToken(notification);
       if (receivedToken !== expectedToken) {
         console.error("[TINKOFF WEBHOOK] Invalid token");
         return res.status(400).send("ERROR: Invalid token");
@@ -462,7 +463,7 @@ class PaymentController {
         Amount: Math.round(payment.totalAmount * 100),
       };
 
-      payload.Token = this.createTinkoffToken(payload);
+      payload.Token = createTinkoffToken(payload);
 
       console.log(
         "[TINKOFF CONFIRM] Request:",
@@ -619,7 +620,7 @@ class PaymentController {
         payload.FinalPayout = true;
       }
 
-      payload.Token = this.createTinkoffToken(payload);
+      payload.Token = createTinkoffToken(payload);
 
       console.log(
         "[TINKOFF PAYOUT] Request:",
@@ -750,7 +751,7 @@ class PaymentController {
         PaymentId: paymentId,
       };
 
-      payload.Token = this.createTinkoffToken(payload);
+      payload.Token = createTinkoffToken(payload);
 
       console.log(
         "[TINKOFF GET STATE] Request:",
