@@ -29,7 +29,7 @@ const User = sequelize.define("user", {
 });
 
 // models.js
-const Contractors = sequelize.define("Contractors", {
+const Contractors = sequelize.define("contractors", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   name: { type: DataTypes.STRING, allowNull: false },
   type: {
@@ -91,7 +91,7 @@ const Contractors = sequelize.define("Contractors", {
   partnerId: { type: DataTypes.STRING },
 });
 
-const Payment = sequelize.define("Payment", {
+const Payment = sequelize.define("payment", {
   id: { type: DataTypes.BIGINT, primaryKey: true },
   orderId: { type: DataTypes.STRING, allowNull: false },
   paymentUrl: { type: DataTypes.STRING },
@@ -109,7 +109,7 @@ const Payment = sequelize.define("Payment", {
   paymentMethod: { type: DataTypes.STRING, defaultValue: "SBP" },
 });
 
-const Payout = sequelize.define("Payout", {
+const Payout = sequelize.define("payout", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   paymentId: { type: DataTypes.BIGINT, allowNull: false },
   partnerId: { type: DataTypes.STRING, allowNull: false },
