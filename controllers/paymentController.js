@@ -64,13 +64,13 @@ class PaymentController {
       }
 
       // Для СБП регистрируем подрядчика только если нужно (не требуется для физлиц)
-    //   if (
-    //     !contractorRecord.partnerId &&
-    //     contractorRecord.type !== CONTRACTOR_TYPES.INDIVIDUAL
-    //   ) {
-    //     await this.registerContractor(contractorRecord);
-    //     await contractorRecord.reload();
-    //   }
+      //   if (
+      //     !contractorRecord.partnerId &&
+      //     contractorRecord.type !== CONTRACTOR_TYPES.INDIVIDUAL
+      //   ) {
+      //     await this.registerContractor(contractorRecord);
+      //     await contractorRecord.reload();
+      //   }
 
       const cleanedPhone = contractorRecord.phone.replace(/[^\d+]/g, "");
       const orderId = `order-${Date.now()}`;
@@ -410,7 +410,13 @@ class PaymentController {
       await payment.update({
         status: Status,
         dealId: SpAccumulationId || payment.dealId,
-        responseData: { ...payment.responseData, notification },
+        responseData: {
+          ...payment.responseData,
+          notifications: [
+            ...(payment.responseData?.notifications || []),
+            notification,
+          ],
+        },
       });
 
       console.log(
@@ -419,10 +425,10 @@ class PaymentController {
 
       switch (Status) {
         case "AUTHORIZED":
-          await this.confirmPayment(PaymentId);
+          await controller.confirmPayment(PaymentId);
           break;
         case "CONFIRMED":
-          await this.executePayouts(PaymentId);
+          await controller.executePayouts(PaymentId);
           break;
         case "REJECTED":
         case "REFUNDED":
@@ -794,3 +800,4 @@ class PaymentController {
 }
 
 module.exports = new PaymentController();
+const controller = module.exports;
