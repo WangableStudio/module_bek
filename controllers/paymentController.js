@@ -580,7 +580,7 @@ class PaymentController {
         },
       });
 
-      return payment
+      console.log(payment);
 
       if (!payment) {
         throw ApiError.badRequest(`Платеж с ID ${paymentId} не найден`);
