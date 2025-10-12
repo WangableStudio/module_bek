@@ -574,7 +574,10 @@ class PaymentController {
   async executePayouts(paymentId) {
     try {
       const payment = await Payment.findByPk(paymentId, {
-        include: [{ model: Contractors }],
+        include: {
+          model: Contractors,
+          as: "contractor",
+        },
       });
 
       console.log(payment);
