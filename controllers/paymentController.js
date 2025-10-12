@@ -580,15 +580,13 @@ class PaymentController {
         },
       });
 
-      console.log(payment);
-
       if (!payment) {
         throw ApiError.badRequest(`Платеж с ID ${paymentId} не найден`);
       }
       console.log(`[TINKOFF PAYOUTS] 🔍 Найден платеж:`, {
         id: payment.id,
         total: payment.totalAmount,
-        contractorId: payment.Contractor?.id,
+        contractorId: payment.contractor?.id,
         dealId: payment.dealId,
       });
 
@@ -603,7 +601,7 @@ class PaymentController {
         );
       }
 
-      const contractor = payment.Contractor;
+      const contractor = payment.contractor;
       if (!contractor) {
         throw ApiError.badRequest(
           `Подрядчик не найден для платежа ${paymentId}`
