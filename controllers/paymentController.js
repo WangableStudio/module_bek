@@ -405,7 +405,6 @@ class PaymentController {
         return res.status(404).send("ERROR: Payment not found");
       }
 
-      // приоритеты статусов
       const statusPriority = {
         NEW: 0,
         AUTHORIZED: 1,
@@ -416,7 +415,6 @@ class PaymentController {
         PAYOUTS_COMPLETED: 6,
       };
 
-      // защита от дубликатов
       if (
         payment.responseData?.notifications?.some(
           (n) => n.Status === Status && n.PaymentId === PaymentId
@@ -436,6 +434,8 @@ class PaymentController {
           `[TINKOFF WEBHOOK] Обнаружен возможный откат ${currentStatus} → ${newStatus} для ${PaymentId}. Проверяю через GetState...`
         );
         const stateData = await controller.getState(PaymentId);
+        console.log(stateData);
+        console.log("=================");
         const verifiedStatus = stateData?.status;
         if (verifiedStatus) {
           console.log(
@@ -478,17 +478,18 @@ class PaymentController {
             notification,
           ],
         },
+        isConfirmed: payment.isConfirmed || newStatus === "CONFIRMED",
       });
 
       console.log(
         `[TINKOFF WEBHOOK] Платёж ${PaymentId} обновлён до статуса: ${newStatus}`
       );
 
-      // вызываем действия по статусам
       if (newStatus === "AUTHORIZED") {
-        // вызываем confirmPayment безопасно — без потери this
         try {
+          console.log("qweeeerrrrtyuiop");
           await controller.confirmPayment(PaymentId);
+          console.log("qweeeerrrrtyuiop");
         } catch (err) {
           console.error("[TINKOFF CONFIRM] Ошибка в confirmPayment:", err);
         }
@@ -507,16 +508,14 @@ class PaymentController {
     }
   }
 
-  // ✅ Подтверждение платежа (без изменений)
+  // ✅ Подтверждение платежа
   async confirmPayment(paymentId) {
     try {
       const payment = await Payment.findByPk(paymentId);
-      if (!payment) {
-        throw new Error(`Payment ${paymentId} not found`);
-      }
+      if (!payment) throw ApiError.badRequest(`Платеж ${paymentId} не найден`);
 
       if (payment.isConfirmed) {
-        console.log(`[TINKOFF CONFIRM] Payment ${paymentId} already confirmed`);
+        console.log(`[TINKOFF CONFIRM] 💡 Платеж ${paymentId} уже подтвержден`);
         return { success: true, alreadyConfirmed: true };
       }
 
@@ -525,7 +524,6 @@ class PaymentController {
         PaymentId: paymentId,
         Amount: Math.round(payment.totalAmount * 100),
       };
-
       payload.Token = createTinkoffToken(payload);
 
       const { data } = await axios.post(
@@ -538,11 +536,9 @@ class PaymentController {
       );
 
       if (!data.Success) {
-        console.error("[TINKOFF CONFIRM ERROR]", data);
-        return next(
-          ApiError.badRequest(
-            data.Message || "Ошибка при подтверждении платежа"
-          )
+        console.error("[TINKOFF CONFIRM ERROR] ❌", data);
+        throw ApiError.badRequest(
+          data.Message || "Ошибка при подтверждении платежа"
         );
       }
 
@@ -556,6 +552,7 @@ class PaymentController {
         `[TINKOFF CONFIRM] ✅ Платеж ${paymentId} успешно подтвержден`
       );
 
+      // Выплаты
       try {
         await controller.executePayouts(paymentId);
       } catch (payoutErr) {
@@ -565,29 +562,28 @@ class PaymentController {
         );
       }
 
-      return res.json({
-        success: true,
-        status: data.Status,
-      });
+      return { success: true, status: data.Status };
     } catch (err) {
       console.error(
-        "[TINKOFF CONFIRM ERROR]",
+        "[TINKOFF CONFIRM ERROR] 🚨",
         err.response?.data || err.message
       );
-      ApiError.badRequest("Ошибка при подтверждении платежа", err);
+      throw ApiError.internal("Ошибка при подтверждении платежа");
     }
   }
 
-  async executePayouts(paymentId, next) {
+  // ✅ Выполнение выплат
+  async executePayouts(paymentId) {
     try {
       const payment = await Payment.findByPk(paymentId, {
         include: [{ model: Contractors }],
       });
 
-      if (!payment) {
-        return next(ApiError.badRequest(`Платеж с ID ${paymentId} не найден`));
-      }
+      console.log(payment);
 
+      if (!payment) {
+        throw ApiError.badRequest(`Платеж с ID ${paymentId} не найден`);
+      }
       console.log(`[TINKOFF PAYOUTS] 🔍 Найден платеж:`, {
         id: payment.id,
         total: payment.totalAmount,
@@ -601,15 +597,15 @@ class PaymentController {
       }
 
       if (!payment.dealId) {
-        return next(
-          ApiError.badRequest(`DealId отсутствует для платежа ${paymentId}`)
+        throw ApiError.badRequest(
+          `DealId отсутствует для платежа ${paymentId}`
         );
       }
 
       const contractor = payment.Contractor;
       if (!contractor) {
-        return next(
-          ApiError.badRequest(`Подрядчик не найден для платежа ${paymentId}`)
+        throw ApiError.badRequest(
+          `Подрядчик не найден для платежа ${paymentId}`
         );
       }
 
@@ -622,21 +618,17 @@ class PaymentController {
       }
 
       if (!contractorPartnerId) {
-        return next(
-          ApiError.badRequest(
-            `PartnerId отсутствует для подрядчика ${contractor.id}`
-          )
+        throw ApiError.badRequest(
+          `PartnerId отсутствует для подрядчика ${contractor.id}`
         );
       }
 
-      const results = {
-        contractor: null,
-        company: null,
-      };
+      const results = { contractor: null, company: null };
 
+      // Выплата подрядчику
       if (payment.contractorAmount > 0) {
         try {
-          results.contractor = await controller.sendPayout({
+          results.contractor = await this.sendPayout({
             paymentId: payment.id,
             dealId: payment.dealId,
             partnerId: contractorPartnerId,
@@ -652,13 +644,14 @@ class PaymentController {
             `[TINKOFF PAYOUT ERROR] ❌ Ошибка выплаты подрядчику:`,
             err.message
           );
-          return next(ApiError.internal("Ошибка при выплате подрядчику"));
+          throw ApiError.internal("Ошибка при выплате подрядчику");
         }
       }
 
+      // Выплата компании
       if (payment.companyAmount > 0) {
         try {
-          results.company = await controller.sendPayout({
+          results.company = await this.sendPayout({
             paymentId: payment.id,
             dealId: payment.dealId,
             partnerId: COMPANY_PARTNER_ID,
@@ -674,13 +667,12 @@ class PaymentController {
             `[TINKOFF PAYOUT ERROR] ❌ Ошибка выплаты компании:`,
             err.message
           );
-          return next(ApiError.internal("Ошибка при выплате компании"));
+          throw ApiError.internal("Ошибка при выплате компании");
         }
       }
 
       await payment.update({
         isPaidOut: true,
-        status: "PAYOUTS_COMPLETED",
       });
 
       console.log(
@@ -693,19 +685,23 @@ class PaymentController {
         `[TINKOFF PAYOUTS ERROR] 🚨`,
         err.response?.data || err.message
       );
-      return next(ApiError.internal("Внутренняя ошибка при выполнении выплат"));
+      throw ApiError.internal("Внутренняя ошибка при выполнении выплат");
     }
   }
 
-  // 🏦 Отправка выплаты (без изменений)
-  async sendPayout(
-    { paymentId, dealId, partnerId, amount, type, finalPayout = false },
-    next
-  ) {
+  // ✅ Отправка выплаты
+  async sendPayout({
+    paymentId,
+    dealId,
+    partnerId,
+    amount,
+    type,
+    finalPayout = false,
+  }) {
     try {
       if (!dealId || !partnerId || !amount) {
-        return next(
-          ApiError.badRequest("Отсутствуют обязательные параметры для выплаты")
+        throw ApiError.badRequest(
+          "Отсутствуют обязательные параметры для выплаты"
         );
       }
 
@@ -728,14 +724,15 @@ class PaymentController {
       const { data } = await axios.post(`${TINKOFF_API_URL}/v2/E2C`, payload, {
         headers: { "Content-Type": "application/json" },
         timeout: 15000,
+        validateStatus: (status) => status < 500, // чтобы ловить ошибки от Tinkoff в теле, а не в axios
       });
 
       console.log("[TINKOFF PAYOUT] 📥 Ответ:", data);
 
       if (!data.Success) {
         console.error("[TINKOFF PAYOUT ERROR] ❌", data);
-        return next(
-          ApiError.badRequest(data.Message || "Ошибка при выполнении выплаты")
+        throw ApiError.badRequest(
+          data.Message || "Ошибка при выполнении выплаты"
         );
       }
 
@@ -765,7 +762,7 @@ class PaymentController {
         "[TINKOFF PAYOUT ERROR] 🚨",
         err.response?.data || err.message
       );
-      return next(ApiError.internal("Внутренняя ошибка при отправке выплаты"));
+      throw ApiError.internal("Внутренняя ошибка при отправке выплаты");
     }
   }
 
@@ -868,10 +865,6 @@ class PaymentController {
       );
 
       const data = response.data;
-      console.log(
-        "[TINKOFF GET STATE] Response:",
-        JSON.stringify(data, null, 2)
-      );
 
       if (!data.Success) {
         return next(
