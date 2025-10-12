@@ -96,7 +96,6 @@ const Payment = sequelize.define("payment", {
   orderId: { type: DataTypes.STRING, allowNull: false },
   paymentUrl: { type: DataTypes.STRING },
   status: { type: DataTypes.STRING },
-  contractorId: { type: DataTypes.INTEGER, allowNull: false },
   commission: { type: DataTypes.DECIMAL(15, 2) },
   companyAmount: { type: DataTypes.DECIMAL(15, 2) },
   contractorAmount: { type: DataTypes.DECIMAL(15, 2) },
@@ -107,6 +106,14 @@ const Payment = sequelize.define("payment", {
   isConfirmed: { type: DataTypes.BOOLEAN, defaultValue: false },
   isPaidOut: { type: DataTypes.BOOLEAN, defaultValue: false },
   paymentMethod: { type: DataTypes.STRING, defaultValue: "SBP" },
+  contractorId: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: Contractors,
+      key: "id",
+    },
+    allowNull: false,
+  },
 });
 
 const Payout = sequelize.define("payout", {
@@ -203,6 +210,9 @@ const Company = sequelize.define("company", {
     allowNull: true,
   },
 });
+
+Contractors.hasMany(Payment, { as: "payments", foreignKey: "contractorId" });
+Payment.belongsTo(Contractors, { as: "contractor", foreignKey: "contractorId" });
 
 module.exports = {
   User,

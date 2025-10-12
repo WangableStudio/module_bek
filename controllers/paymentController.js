@@ -600,7 +600,7 @@ class PaymentController {
         );
       }
 
-      const contractor = null;
+      const contractor = payment.Contractor;
       if (!contractor) {
         throw ApiError.badRequest(
           `Подрядчик не найден для платежа ${paymentId}`
