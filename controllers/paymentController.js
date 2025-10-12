@@ -487,9 +487,7 @@ class PaymentController {
 
       if (newStatus === "AUTHORIZED") {
         try {
-          console.log("qweeeerrrrtyuiop");
           await controller.confirmPayment(PaymentId);
-          console.log("qweeeerrrrtyuiop");
         } catch (err) {
           console.error("[TINKOFF CONFIRM] Ошибка в confirmPayment:", err);
         }
@@ -602,7 +600,7 @@ class PaymentController {
         );
       }
 
-      const contractor = payment.Contractor;
+      const contractor = null;
       if (!contractor) {
         throw ApiError.badRequest(
           `Подрядчик не найден для платежа ${paymentId}`
