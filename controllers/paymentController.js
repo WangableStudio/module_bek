@@ -379,36 +379,97 @@ class PaymentController {
     try {
       const notification = { ...req.body };
       console.log(
-        "[TINKOFF WEBHOOK] Received:",
+        "[TINKOFF WEBHOOK] Получено уведомление:",
         JSON.stringify(notification, null, 2)
       );
 
       const receivedToken = notification.Token;
       delete notification.Token;
-
       const expectedToken = createTinkoffToken(notification);
       if (receivedToken !== expectedToken) {
-        console.error("[TINKOFF WEBHOOK] Invalid token");
+        console.error("[TINKOFF WEBHOOK] Неверный токен");
         return res.status(400).send("ERROR: Invalid token");
       }
 
-      const { PaymentId, Status, SpAccumulationId } = notification;
-
-      const payment = await Payment.findByPk(PaymentId);
-      if (!payment) {
-        console.error("[TINKOFF WEBHOOK] Payment not found:", PaymentId);
-        return res.status(404).send("ERROR: Payment not found");
-      }
-
-      if (payment.status === Status) {
-        console.log(
-          `[TINKOFF WEBHOOK] Status ${Status} already processed for payment ${PaymentId}`
+      const { PaymentId, Status, SpAccumulationId, Success } = notification;
+      if (!Success) {
+        console.warn(
+          `[TINKOFF WEBHOOK] Игнорирую уведомление с Success=false для ${PaymentId}`
         );
         return res.send("OK");
       }
 
+      const payment = await Payment.findByPk(PaymentId);
+      if (!payment) {
+        console.error("[TINKOFF WEBHOOK] Платёж не найден:", PaymentId);
+        return res.status(404).send("ERROR: Payment not found");
+      }
+
+      // приоритеты статусов
+      const statusPriority = {
+        NEW: 0,
+        AUTHORIZED: 1,
+        CONFIRMED: 2,
+        REJECTED: 3,
+        REFUNDED: 4,
+        CANCELED: 5,
+        PAYOUTS_COMPLETED: 6,
+      };
+
+      // защита от дубликатов
+      if (
+        payment.responseData?.notifications?.some(
+          (n) => n.Status === Status && n.PaymentId === PaymentId
+        )
+      ) {
+        console.log(
+          `[TINKOFF WEBHOOK] Дубликат уведомления ${Status} для ${PaymentId} — игнорирую`
+        );
+        return res.send("OK");
+      }
+
+      // защита от отката статуса
+      const currentStatus = payment.status || "NEW";
+      const newStatus = Status;
+      if (statusPriority[newStatus] < statusPriority[currentStatus]) {
+        console.log(
+          `[TINKOFF WEBHOOK] Обнаружен возможный откат ${currentStatus} → ${newStatus} для ${PaymentId}. Проверяю через GetState...`
+        );
+        const stateData = await controller.getState(PaymentId);
+        const verifiedStatus = stateData?.status;
+        if (verifiedStatus) {
+          console.log(
+            `[CHECK STATE] Tinkoff вернул статус ${verifiedStatus} для ${PaymentId}`
+          );
+          if (statusPriority[verifiedStatus] >= statusPriority[currentStatus]) {
+            await payment.update({
+              status: verifiedStatus,
+              dealId: SpAccumulationId || payment.dealId,
+              responseData: {
+                ...payment.responseData,
+                verifiedState: verifiedStatus,
+                notifications: [
+                  ...(payment.responseData?.notifications || []),
+                  notification,
+                ],
+              },
+            });
+          } else {
+            console.log(
+              `[TINKOFF WEBHOOK] Откат подтверждён локально — игнорирую изменение статуса для ${PaymentId}`
+            );
+          }
+        } else {
+          console.warn(
+            `[TINKOFF WEBHOOK] Не удалось проверить статус через GetState для ${PaymentId} — игнорирую откат`
+          );
+        }
+        return res.send("OK");
+      }
+
+      // обычное обновление
       await payment.update({
-        status: Status,
+        status: newStatus,
         dealId: SpAccumulationId || payment.dealId,
         responseData: {
           ...payment.responseData,
@@ -420,33 +481,29 @@ class PaymentController {
       });
 
       console.log(
-        `[TINKOFF WEBHOOK] Payment ${PaymentId} status updated to: ${Status}`
+        `[TINKOFF WEBHOOK] Платёж ${PaymentId} обновлён до статуса: ${newStatus}`
       );
 
-      switch (Status) {
-        case "AUTHORIZED":
-          await controller.confirmPayment(PaymentId);
-          break;
-        case "CONFIRMED":
-          await controller.executePayouts(PaymentId);
-          break;
-        case "REJECTED":
-        case "REFUNDED":
-        case "CANCELED":
-          console.log(
-            `[TINKOFF WEBHOOK] Payment ${PaymentId} finished with status: ${Status}`
-          );
-          break;
-        default:
-          console.log(
-            `[TINKOFF WEBHOOK] Payment ${PaymentId} has status: ${Status}`
-          );
+      // вызываем действия по статусам
+      if (newStatus === "AUTHORIZED") {
+        // вызываем confirmPayment безопасно — без потери this
+        try {
+          await this.confirmPayment(PaymentId);
+        } catch (err) {
+          console.error("[TINKOFF CONFIRM] Ошибка в confirmPayment:", err);
+        }
+      } else if (newStatus === "CONFIRMED") {
+        try {
+          await this.executePayouts(PaymentId);
+        } catch (err) {
+          console.error("[TINKOFF PAYOUTS] Ошибка в executePayouts:", err);
+        }
       }
 
-      res.send("OK");
+      return res.send("OK");
     } catch (err) {
       console.error("[TINKOFF WEBHOOK ERROR]", err);
-      res.status(500).send("ERROR");
+      return res.status(500).send("ERROR");
     }
   }
 
