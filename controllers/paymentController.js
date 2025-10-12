@@ -85,7 +85,7 @@ class PaymentController {
         }`,
         CreateDealWithType: "NN",
         PaymentRecipientId: cleanedPhone,
-        NotificationURL: `${BACKEND_URL}/api/payment/notification`,
+        NotificationURL: `${BACKEND_URL}/api/v1/payment/notification`,
         DATA: {
           Phone: cleanedPhone,
           Email: contractorRecord.email || "",
@@ -578,6 +578,9 @@ class PaymentController {
         include: [{ model: Contractors }],
       });
 
+      console.log(payment);
+      
+
       if (!payment) {
         throw new Error(`Payment ${paymentId} not found`);
       }
@@ -762,12 +765,13 @@ class PaymentController {
   async confirm(req, res, next) {
     try {
       const { paymentId } = req.body;
-
+      console.log(paymentId);
+      
       if (!paymentId) {
         return next(ApiError.badRequest("ID платежа не указан"));
       }
 
-      await this.confirmPayment(paymentId);
+      await controller.confirmPayment(paymentId);
 
       return res.json({
         success: true,
