@@ -528,11 +528,6 @@ class PaymentController {
 
       payload.Token = createTinkoffToken(payload);
 
-      console.log(
-        "[TINKOFF CONFIRM] Request:",
-        JSON.stringify(payload, null, 2)
-      );
-
       const { data } = await axios.post(
         `${TINKOFF_API_URL}/v2/Confirm`,
         payload,
@@ -541,8 +536,6 @@ class PaymentController {
           timeout: 30000,
         }
       );
-
-      console.log("[TINKOFF CONFIRM] 📥 Ответ:", data);
 
       if (!data.Success) {
         console.error("[TINKOFF CONFIRM ERROR]", data);
@@ -864,11 +857,6 @@ class PaymentController {
       };
 
       payload.Token = createTinkoffToken(payload);
-
-      console.log(
-        "[TINKOFF GET STATE] Request:",
-        JSON.stringify(payload, null, 2)
-      );
 
       const response = await axios.post(
         `${TINKOFF_API_URL}/v2/GetState`,
