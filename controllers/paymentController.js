@@ -488,13 +488,13 @@ class PaymentController {
       if (newStatus === "AUTHORIZED") {
         // вызываем confirmPayment безопасно — без потери this
         try {
-          await this.confirmPayment(PaymentId);
+          await controller.confirmPayment(PaymentId);
         } catch (err) {
           console.error("[TINKOFF CONFIRM] Ошибка в confirmPayment:", err);
         }
       } else if (newStatus === "CONFIRMED") {
         try {
-          await this.executePayouts(PaymentId);
+          await controller.executePayouts(PaymentId);
         } catch (err) {
           console.error("[TINKOFF PAYOUTS] Ошибка в executePayouts:", err);
         }
