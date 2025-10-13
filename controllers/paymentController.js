@@ -866,6 +866,42 @@ class PaymentController {
       return next(ApiError.internal("Ошибка при получении статуса платежа"));
     }
   }
+
+  async GetSbpMembers(req, res, next) {
+    try {
+      const payload = {
+        TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
+      };
+
+      payload.Token = createTinkoffToken(payload);
+
+      const response = await axios.post(
+        "https://securepay.tinkoff.ru/a2c/sbp/GetSbpMembers",
+        payload,
+        {
+          headers: { "Content-Type": "application/json" },
+          timeout: 30000,
+        }
+      );
+
+      const data = response.data;
+
+      if (!data.Success) {
+        return next(
+          ApiError.badRequest(data.Message || "Ошибка получения статуса")
+        );
+      }
+
+      return res.json(data);
+    } catch (err) {
+      console.log(err);
+      return next(
+        ApiError.badRequest(
+          "Ошибка при получение списка идентификаторов банков, участвующих в СБП."
+        )
+      );
+    }
+  }
 }
 
 module.exports = new PaymentController();
