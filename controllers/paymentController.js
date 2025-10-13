@@ -883,6 +883,8 @@ class PaymentController {
           timeout: 30000,
         }
       );
+      console.log(response);
+      
 
       const data = response.data;
 
