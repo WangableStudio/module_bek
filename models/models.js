@@ -30,7 +30,19 @@ const User = sequelize.define("user", {
   },
 });
 
-// models.js
+const Members = sequelize.define("members", {
+  MemberId: {
+    type: DataTypes.STRING,
+    primaryKey: true,
+  },
+  MemberName: {
+    type: DataTypes.STRING,
+  },
+  MemberNameRus: {
+    type: DataTypes.STRING,
+  },
+});
+
 const Contractors = sequelize.define("contractors", {
   id: {
     type: DataTypes.UUID,
@@ -210,19 +222,6 @@ const Company = sequelize.define("company", {
   director: {
     type: DataTypes.STRING,
     allowNull: true,
-  },
-});
-
-const Members = sequelize.define("members", {
-  MemberId: {
-    type: DataTypes.STRING,
-    primaryKey: true,
-  },
-  MemberName: {
-    type: DataTypes.STRING,
-  },
-  MemberNameRus: {
-    type: DataTypes.STRING,
   },
 });
 
