@@ -32,7 +32,11 @@ const User = sequelize.define("user", {
 
 // models.js
 const Contractors = sequelize.define("contractors", {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
   name: { type: DataTypes.STRING, allowNull: false },
   type: {
     type: DataTypes.ENUM(Object.values(CONTRACTOR_TYPES)),
@@ -45,8 +49,6 @@ const Contractors = sequelize.define("contractors", {
   kpp: { type: DataTypes.STRING, defaultValue: "000000000" },
   ogrn: { type: DataTypes.STRING },
   okved: { type: DataTypes.STRING },
-  regDepartment: { type: DataTypes.STRING },
-  regDate: { type: DataTypes.STRING },
 
   // Контактная информация
   phone: { type: DataTypes.STRING },
@@ -60,14 +62,12 @@ const Contractors = sequelize.define("contractors", {
   zip: { type: DataTypes.STRING },
   city: { type: DataTypes.STRING },
   country: { type: DataTypes.STRING, defaultValue: "RUS" },
+  street: { type: DataTypes.STRING },
 
   // Банковские реквизиты
   bankAccount: { type: DataTypes.STRING },
   bankName: { type: DataTypes.STRING },
   bankBik: { type: DataTypes.STRING },
-  bankCorrespondentAccount: { type: DataTypes.STRING },
-  bankKbk: { type: DataTypes.STRING },
-  bankOktmo: { type: DataTypes.STRING },
 
   // Дополнительные поля для регистрации
   fullName: { type: DataTypes.STRING }, // Полное наименование
@@ -79,18 +79,18 @@ const Contractors = sequelize.define("contractors", {
   // Руководитель
   ceoFirstName: { type: DataTypes.STRING },
   ceoLastName: { type: DataTypes.STRING },
-  ceoMiddleName: { type: DataTypes.STRING },
-  ceoBirthDate: { type: DataTypes.STRING },
-  ceoBirthPlace: { type: DataTypes.STRING },
-  ceoDocType: { type: DataTypes.STRING },
-  ceoDocNumber: { type: DataTypes.STRING },
-  ceoIssueDate: { type: DataTypes.STRING },
-  ceoIssuedBy: { type: DataTypes.STRING },
-  ceoAddress: { type: DataTypes.TEXT },
   ceoPhone: { type: DataTypes.STRING },
   ceoCountry: { type: DataTypes.STRING, defaultValue: "RUS" },
 
   partnerId: { type: DataTypes.STRING },
+  memberId: {
+    type: DataTypes.STRING,
+    references: {
+      model: Members,
+      key: "MemberId",
+    },
+    allowNull: false,
+  },
 });
 
 const Payment = sequelize.define("payment", {

@@ -29,10 +29,6 @@ class ContractorsController {
         email,
         phone,
         siteUrl,
-        regDepartment,
-        regDate,
-        assets,
-        primaryActivities,
         comment,
 
         // Адреса
@@ -42,26 +38,16 @@ class ContractorsController {
         zip,
         city,
         country,
+        street,
 
         // Банковские реквизиты
         bankName,
         bankAccount,
         bankBik,
-        bankCorrespondentAccount,
-        bankKbk,
-        bankOktmo,
 
         // Руководитель
         ceoFirstName,
         ceoLastName,
-        ceoMiddleName,
-        ceoBirthDate,
-        ceoBirthPlace,
-        ceoDocType,
-        ceoDocNumber,
-        ceoIssueDate,
-        ceoIssuedBy,
-        ceoAddress,
         ceoPhone,
         ceoCountry,
       } = req.body;
@@ -81,6 +67,7 @@ class ContractorsController {
         "zip",
         "city",
         "country",
+        "street",
         "bankName",
         "bankAccount",
         "bankBik",
@@ -127,10 +114,6 @@ class ContractorsController {
         email,
         phone,
         siteUrl,
-        regDepartment,
-        regDate,
-        assets,
-        primaryActivities,
         comment,
 
         // Адреса
@@ -140,26 +123,16 @@ class ContractorsController {
         zip,
         city,
         country: country || "RUS",
+        street,
 
         // Банковские реквизиты
         bankName,
         bankAccount,
         bankBik,
-        bankCorrespondentAccount,
-        bankKbk,
-        bankOktmo,
 
         // Руководитель
         ceoFirstName,
         ceoLastName,
-        ceoMiddleName,
-        ceoBirthDate,
-        ceoBirthPlace,
-        ceoDocType,
-        ceoDocNumber,
-        ceoIssueDate,
-        ceoIssuedBy,
-        ceoAddress,
         ceoPhone,
         ceoCountry: ceoCountry || "RUS",
       });
@@ -225,7 +198,6 @@ class ContractorsController {
         type,
         name,
         fullName,
-        billingDescriptor,
         inn,
         ogrn,
         kpp,
@@ -233,12 +205,8 @@ class ContractorsController {
         email,
         phone,
         siteUrl,
-        regDepartment,
-        regDate,
-        assets,
-        primaryActivities,
         comment,
-
+        billingDescriptor,
         // Адреса
         legalAddress,
         actualAddress,
@@ -246,26 +214,16 @@ class ContractorsController {
         zip,
         city,
         country,
+        street,
 
         // Банковские реквизиты
         bankName,
         bankAccount,
         bankBik,
-        bankCorrespondentAccount,
-        bankKbk,
-        bankOktmo,
 
         // Руководитель
         ceoFirstName,
         ceoLastName,
-        ceoMiddleName,
-        ceoBirthDate,
-        ceoBirthPlace,
-        ceoDocType,
-        ceoDocNumber,
-        ceoIssueDate,
-        ceoIssuedBy,
-        ceoAddress,
         ceoPhone,
         ceoCountry,
       } = req.body;
@@ -300,10 +258,6 @@ class ContractorsController {
         email: email ?? contractor.email,
         phone: phone ?? contractor.phone,
         siteUrl: siteUrl ?? contractor.siteUrl,
-        regDepartment: regDepartment ?? contractor.regDepartment,
-        regDate: regDate ?? contractor.regDate,
-        assets: assets ?? contractor.assets,
-        primaryActivities: primaryActivities ?? contractor.primaryActivities,
         comment: comment ?? contractor.comment,
 
         // Адреса
@@ -313,27 +267,16 @@ class ContractorsController {
         zip: zip ?? contractor.zip,
         city: city ?? contractor.city,
         country: country ?? contractor.country,
+        street: street ?? contractor.street,
 
         // Банковские реквизиты
         bankName: bankName ?? contractor.bankName,
         bankAccount: bankAccount ?? contractor.bankAccount,
         bankBik: bankBik ?? contractor.bankBik,
-        bankCorrespondentAccount:
-          bankCorrespondentAccount ?? contractor.bankCorrespondentAccount,
-        bankKbk: bankKbk ?? contractor.bankKbk,
-        bankOktmo: bankOktmo ?? contractor.bankOktmo,
 
         // Руководитель
         ceoFirstName: ceoFirstName ?? contractor.ceoFirstName,
         ceoLastName: ceoLastName ?? contractor.ceoLastName,
-        ceoMiddleName: ceoMiddleName ?? contractor.ceoMiddleName,
-        ceoBirthDate: ceoBirthDate ?? contractor.ceoBirthDate,
-        ceoBirthPlace: ceoBirthPlace ?? contractor.ceoBirthPlace,
-        ceoDocType: ceoDocType ?? contractor.ceoDocType,
-        ceoDocNumber: ceoDocNumber ?? contractor.ceoDocNumber,
-        ceoIssueDate: ceoIssueDate ?? contractor.ceoIssueDate,
-        ceoIssuedBy: ceoIssuedBy ?? contractor.ceoIssuedBy,
-        ceoAddress: ceoAddress ?? contractor.ceoAddress,
         ceoPhone: ceoPhone ?? contractor.ceoPhone,
         ceoCountry: ceoCountry ?? contractor.ceoCountry,
       });
