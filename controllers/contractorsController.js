@@ -73,7 +73,6 @@ class ContractorsController {
         "bankBik",
         "ceoFirstName",
         "ceoLastName",
-        "ceoAddress",
         "ceoPhone",
         "ceoCountry",
       ];
