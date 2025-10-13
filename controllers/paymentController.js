@@ -870,7 +870,7 @@ class PaymentController {
   async GetSbpMembers(req, res, next) {
     try {
       const payload = {
-        TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
+        TerminalKey: TINKOFF_TERMINAL_KEY,
       };
 
       payload.Token = createTinkoffToken(payload);
@@ -888,7 +888,7 @@ class PaymentController {
 
       if (!data.Success) {
         return next(
-          ApiError.badRequest(data.Message || "Ошибка получения статуса")
+          ApiError.badRequest(data.Message)
         );
       }
 
