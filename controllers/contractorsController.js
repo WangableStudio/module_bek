@@ -1,5 +1,5 @@
 const ApiError = require("../error/ApiError");
-const { Contractors, User } = require("../models/models");
+const { Contractors, User, Members } = require("../models/models");
 
 function validateINN(inn) {
   if (!inn) return false;

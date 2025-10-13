@@ -884,24 +884,22 @@ class PaymentController {
           timeout: 30000,
         }
       );
-      
+
       const data = response.data;
 
       if (!data.Success) {
-        return next(
-          ApiError.badRequest(data.Message)
-        );
+        return next(ApiError.badRequest(data.Message));
       }
 
-      for(const member of data.Members) {
+      for (const member of data.Members) {
         await Members.create({
           MemberId: member.MemberId,
           MemberName: member.MemberName,
-          MemberNameRus: member.MemberNameRus
-        })
+          MemberNameRus: member.MemberNameRus,
+        });
       }
 
-      return res.json({message: "Успешно"});
+      return res.json({ message: "Успешно" });
     } catch (err) {
       console.log(err);
       return next(
@@ -909,6 +907,17 @@ class PaymentController {
           "Ошибка при получение списка идентификаторов банков, участвующих в СБП."
         )
       );
+    }
+  }
+
+  async getBankName(req, res, next) {
+    try {
+      const members = await Members.findAll();
+
+      return res.json(members);
+    } catch (err) {
+      console.error(err);
+      return next(ApiError.badRequest("Ошибка при получении банков"));
     }
   }
 }

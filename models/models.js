@@ -226,6 +226,15 @@ const Members = sequelize.define("members", {
   },
 });
 
+Members.hasMany(Contractors, {
+  foreignKey: "memberId",
+  as: "contractors",
+});
+Contractors.belongsTo(Members, {
+  foreignKey: "memberId",
+  as: "member",
+});
+
 Contractors.hasMany(Payment, { as: "payments", foreignKey: "contractorId" });
 Payment.belongsTo(Contractors, {
   as: "contractor",
