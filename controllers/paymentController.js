@@ -599,7 +599,7 @@ class PaymentController {
       let partnerId = contractor.partnerId;
       if (!partnerId && contractor.type === CONTRACTOR_TYPES.IP) {
         partnerId = "";
-        paymentType.phone = contractor.phone.replace(/[^\d+]/g, "");
+        paymentType.phone = contractor.phone.replace(/\D/g, "");
         paymentType.SbpMemberId = contractor.memberId;
       }
 
@@ -712,7 +712,7 @@ class PaymentController {
       const amountInKopecks = Math.round(amount * 100);
       const orderId = `payout-${Date.now()}-${type || "unknown"}`;
       console.log(TINKOFF_TERMINAL_KEY_E2C);
-      
+
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
         DealId: dealId,
@@ -729,10 +729,14 @@ class PaymentController {
 
       console.log("[TINKOFF PAYOUT] 📤 Запрос:", payload);
 
-      const { data } = await axios.post(`${TINKOFF_API_URL}/e2c/v2/Init`, payload, {
-        headers: { "Content-Type": "application/json" },
-        timeout: 15000,
-      });
+      const { data } = await axios.post(
+        `${TINKOFF_API_URL}/e2c/v2/Init`,
+        payload,
+        {
+          headers: { "Content-Type": "application/json" },
+          timeout: 15000,
+        }
+      );
 
       console.log("[TINKOFF PAYOUT] 📥 Ответ:", data);
 
