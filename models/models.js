@@ -6,7 +6,7 @@ const CONTRACTOR_TYPES = {
   LEGAL_ENTITY: "legal_entity",
   SELF_EMPLOYED: "self_employed",
   IP: "ip",
-  OOO: 'ooo'
+  OOO: "ooo",
 };
 
 const User = sequelize.define("user", {
@@ -213,8 +213,24 @@ const Company = sequelize.define("company", {
   },
 });
 
+const Members = sequelize.define("members", {
+  MemberId: {
+    type: DataTypes.STRING,
+    primaryKey: true,
+  },
+  MemberName: {
+    type: DataTypes.STRING,
+  },
+  MemberNameRus: {
+    type: DataTypes.STRING,
+  },
+});
+
 Contractors.hasMany(Payment, { as: "payments", foreignKey: "contractorId" });
-Payment.belongsTo(Contractors, { as: "contractor", foreignKey: "contractorId" });
+Payment.belongsTo(Contractors, {
+  as: "contractor",
+  foreignKey: "contractorId",
+});
 
 module.exports = {
   User,
@@ -223,5 +239,6 @@ module.exports = {
   Company,
   Payment,
   Payout,
+  Members,
   CONTRACTOR_TYPES,
 };

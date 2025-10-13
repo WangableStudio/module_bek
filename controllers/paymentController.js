@@ -5,6 +5,7 @@ const {
   Contractors,
   Payout,
   CONTRACTOR_TYPES,
+  Members,
 } = require("../models/models");
 const ApiError = require("../error/ApiError");
 
@@ -883,9 +884,7 @@ class PaymentController {
           timeout: 30000,
         }
       );
-      console.log(response);
       
-
       const data = response.data;
 
       if (!data.Success) {
@@ -894,7 +893,15 @@ class PaymentController {
         );
       }
 
-      return res.json(data);
+      for(const member of data.Members) {
+        await Members.create({
+          MemberId: member.MemberId,
+          MemberName: member.MemberName,
+          MemberNameRus: member.MemberNameRus
+        })
+      }
+
+      return res.json({message: "Успешно"});
     } catch (err) {
       console.log(err);
       return next(
