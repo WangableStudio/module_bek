@@ -145,91 +145,80 @@ class PaymentController {
   // 👥 Регистрация подрядчика с полными данными
   async registerContractor(contractor) {
     try {
-      // Формируем базовый payload
+      if (!contractor || !contractor.id) {
+        throw ApiError.badRequest("Некорректные данные подрядчика");
+      }
+
       const payload = {
         terminalKey: TINKOFF_TERMINAL_KEY,
         serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
         shopArticleId: `contractor_${contractor.id}`,
-        billingDescriptor: contractor.billingDescriptor || contractor.name,
+        billingDescriptor: contractor.name,
         fullName: contractor.fullName || contractor.name,
         name: contractor.name,
         inn: contractor.inn,
         kpp: contractor.kpp || "000000000",
         okved: contractor.okved,
         ogrn: parseInt(contractor.ogrn) || 0,
-        regDepartment: contractor.regDepartment,
-        regDate: contractor.regDate,
         email: contractor.email,
-        assets: contractor.assets,
-        siteUrl: contractor.siteUrl,
-        primaryActivities: contractor.primaryActivities,
-        comment: contractor.comment,
-        nonResident: false,
+        siteUrl: BACKEND_URL,
       };
 
-      // Добавляем MCC код если указан
       if (MCC_CODE) {
         payload.mcc = parseInt(MCC_CODE);
       }
 
-      // Формируем адреса
-      payload.addresses = this.formatAddresses(contractor);
+      payload.addresses = controller.formatAddresses(contractor);
+      payload.ceo = controller.formatCEO(contractor);
+      payload.bankAccount = controller.formatBankAccount(contractor);
 
-      // Формируем телефоны
-      payload.phones = this.formatPhones(contractor);
-
-      // Формируем учредителей (для юрлиц)
-      if (contractor.type === CONTRACTOR_TYPES.LEGAL_ENTITY) {
-        payload.founders = this.formatFounders(contractor);
-      }
-
-      // Формируем данные руководителя
-      payload.ceo = this.formatCEO(contractor);
-
-      // Формируем банковские реквизиты
-      payload.bankAccount = this.formatBankAccount(contractor);
-
-      // Убираем пустые поля
-      this.cleanPayload(payload);
+      controller.cleanPayload(payload);
 
       payload.token = createTinkoffToken(payload);
 
       console.log(
-        "[TINKOFF REGISTER PARTNER] Request:",
+        "[TINKOFF REGISTER PARTNER] 📤 Запрос:",
         JSON.stringify(payload, null, 2)
       );
 
-      const response = await axios.post(
-        `${TINKOFF_API_URL}/v2/RegisterPartner`,
+      const { data } = await axios.post(
+        "https://acqapi-test.tinkoff.ru/sm-register/register",
         payload,
         {
           headers: { "Content-Type": "application/json" },
           timeout: 30000,
+          validateStatus: (status) => status < 500, // не кидает 4xx
         }
       );
 
-      const data = response.data;
       console.log(
-        "[TINKOFF REGISTER PARTNER] Response:",
+        "[TINKOFF REGISTER PARTNER] 📥 Ответ:",
         JSON.stringify(data, null, 2)
       );
 
-      if (data.success) {
-        await contractor.update({ partnerId: data.partnerId });
-        console.log(
-          `[TINKOFF PARTNER] Contractor ${contractor.id} registered with PartnerId: ${data.partnerId}`
-        );
-        return data;
-      } else {
+      if (!data.success) {
         console.error("[TINKOFF PARTNER ERROR]", data);
-        throw new Error(data.message || "Ошибка регистрации партнера");
+        throw ApiError.badRequest(
+          data.message || "Ошибка регистрации партнёра в Tinkoff"
+        );
       }
+
+      await contractor.update({ partnerId: data.partnerId });
+      console.log(
+        `[TINKOFF PARTNER] ✅ Подрядчик ${contractor.id} успешно зарегистрирован (PartnerId: ${data.partnerId})`
+      );
+
+      return {
+        success: true,
+        partnerId: data.partnerId,
+        message: "Партнёр успешно зарегистрирован",
+      };
     } catch (err) {
       console.error(
-        "[TINKOFF PARTNER ERROR]",
+        "[TINKOFF PARTNER EXCEPTION] 🚨",
         err.response?.data || err.message
       );
-      throw err;
+      throw ApiError.internal("Ошибка при регистрации подрядчика");
     }
   }
 
@@ -773,7 +762,7 @@ class PaymentController {
         return next(ApiError.badRequest("Подрядчик не найден"));
       }
 
-      const result = await this.registerContractor(contractor);
+      const result = await controller.registerContractor(contractor);
 
       return res.json({
         success: true,
