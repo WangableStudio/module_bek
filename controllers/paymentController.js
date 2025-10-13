@@ -583,12 +583,6 @@ class PaymentController {
       if (!payment) {
         throw ApiError.badRequest(`Платеж с ID ${paymentId} не найден`);
       }
-      console.log(`[TINKOFF PAYOUTS] 🔍 Найден платеж:`, {
-        id: payment.id,
-        total: payment.totalAmount,
-        contractorId: payment.contractor?.id,
-        dealId: payment.dealId,
-      });
 
       if (payment.isPaidOut) {
         console.log(`[TINKOFF PAYOUTS] 💡 Платеж ${paymentId} уже выплачен`);

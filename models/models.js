@@ -5,6 +5,8 @@ const CONTRACTOR_TYPES = {
   INDIVIDUAL: "individual",
   LEGAL_ENTITY: "legal_entity",
   SELF_EMPLOYED: "self_employed",
+  IP: "ip",
+  OOO: 'ooo'
 };
 
 const User = sequelize.define("user", {
