@@ -563,7 +563,6 @@ class PaymentController {
   // ✅ Выполнение выплат
   async executePayouts(paymentId) {
     try {
-      console.log(paymentId);
 
       const payment = await Payment.findByPk(paymentId, {
         include: {
@@ -603,8 +602,6 @@ class PaymentController {
         paymentType.SbpMemberId = contractor.memberId;
       }
 
-      console.log(paymentType);
-
       if (
         !partnerId &&
         [
@@ -633,8 +630,8 @@ class PaymentController {
           };
 
           if (Object.keys(paymentType).length > 0) {
-            payoutPayload.memberId = paymentType.SbpMemberId;
-            payoutPayload.phone = paymentType.phone;
+            payoutPayload.memberId = '100000000012';
+            payoutPayload.phone = '79066589133';
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
@@ -711,7 +708,6 @@ class PaymentController {
 
       const amountInKopecks = Math.round(amount * 100);
       const orderId = `payout-${Date.now()}-${type || "unknown"}`;
-      console.log(TINKOFF_TERMINAL_KEY_E2C);
 
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
