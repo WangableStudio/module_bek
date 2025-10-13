@@ -84,8 +84,6 @@ const Contractors = sequelize.define("contractors", {
   // Дополнительные поля для регистрации
   fullName: { type: DataTypes.STRING }, // Полное наименование
   billingDescriptor: { type: DataTypes.STRING },
-  assets: { type: DataTypes.STRING },
-  primaryActivities: { type: DataTypes.TEXT },
   comment: { type: DataTypes.TEXT },
 
   // Руководитель
@@ -121,7 +119,7 @@ const Payment = sequelize.define("payment", {
   isPaidOut: { type: DataTypes.BOOLEAN, defaultValue: false },
   paymentMethod: { type: DataTypes.STRING, defaultValue: "SBP" },
   contractorId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING,
     references: {
       model: Contractors,
       key: "id",
