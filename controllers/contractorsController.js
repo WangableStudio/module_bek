@@ -50,6 +50,7 @@ class ContractorsController {
         ceoLastName,
         ceoPhone,
         ceoCountry,
+        memberId,
       } = req.body;
 
       // Проверка обязательных полей
@@ -133,6 +134,7 @@ class ContractorsController {
         ceoFirstName,
         ceoLastName,
         ceoPhone,
+        memberId,
         ceoCountry: ceoCountry || "RUS",
       });
 
