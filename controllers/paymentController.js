@@ -563,6 +563,8 @@ class PaymentController {
   // ✅ Выполнение выплат
   async executePayouts(paymentId) {
     try {
+      console.log(paymentId);
+
       const payment = await Payment.findByPk(paymentId, {
         include: {
           model: Contractors,
@@ -592,17 +594,27 @@ class PaymentController {
         );
       }
 
-      let contractorPartnerId = contractor.partnerId;
-      if (
-        !contractorPartnerId &&
-        contractor.type === CONTRACTOR_TYPES.INDIVIDUAL
-      ) {
-        contractorPartnerId = contractor.phone?.replace(/[^\d+]/g, "") || null;
+      const paymentType = {};
+
+      let partnerId = contractor.partnerId;
+      if (!partnerId && contractor.type === CONTRACTOR_TYPES.IP) {
+        partnerId = "";
+        paymentType.phone = contractor.phone.replace(/[^\d+]/g, "");
+        paymentType.SbpMemberId = contractor.memberId;
       }
 
-      if (!contractorPartnerId) {
+      console.log(paymentType);
+
+      if (
+        !partnerId &&
+        [
+          CONTRACTOR_TYPES.INDIVIDUAL,
+          CONTRACTOR_TYPES.OOO,
+          CONTRACTOR_TYPES.LEGAL_ENTITY,
+        ].includes(contractor.type)
+      ) {
         throw ApiError.badRequest(
-          `PartnerId отсутствует для подрядчика ${contractor.id}`
+          `PartnerId отсутствует для подрядчика ${contractor.id} (${contractor.type})`
         );
       }
 
@@ -611,14 +623,21 @@ class PaymentController {
       // Выплата подрядчику
       if (payment.contractorAmount > 0) {
         try {
-          results.contractor = await this.sendPayout({
+          const payoutPayload = {
             paymentId: payment.id,
             dealId: payment.dealId,
-            partnerId: contractorPartnerId,
+            partnerId: partnerId,
             amount: payment.contractorAmount,
             type: "contractor",
             finalPayout: false,
-          });
+          };
+
+          if (Object.keys(paymentType).length > 0) {
+            payoutPayload.memberId = paymentType.SbpMemberId;
+            payoutPayload.phone = paymentType.phone;
+          }
+
+          results.contractor = await controller.sendPayout(payoutPayload);
           console.log(
             `[TINKOFF PAYOUT] ✅ Выплата подрядчику завершена (paymentId: ${paymentId})`
           );
@@ -679,10 +698,12 @@ class PaymentController {
     partnerId,
     amount,
     type,
+    phone,
+    memberId,
     finalPayout = false,
   }) {
     try {
-      if (!dealId || !partnerId || !amount) {
+      if (!dealId || !amount) {
         throw ApiError.badRequest(
           "Отсутствуют обязательные параметры для выплаты"
         );
@@ -690,12 +711,15 @@ class PaymentController {
 
       const amountInKopecks = Math.round(amount * 100);
       const orderId = `payout-${Date.now()}-${type || "unknown"}`;
-
+      console.log(TINKOFF_TERMINAL_KEY_E2C);
+      
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
         DealId: dealId,
         PartnerId: partnerId,
         Amount: amountInKopecks,
+        Phone: phone,
+        SbpMemberId: memberId,
         OrderId: orderId,
       };
 
@@ -707,7 +731,6 @@ class PaymentController {
       const { data } = await axios.post(`${TINKOFF_API_URL}/v2/E2C`, payload, {
         headers: { "Content-Type": "application/json" },
         timeout: 15000,
-        validateStatus: (status) => status < 500, // чтобы ловить ошибки от Tinkoff в теле, а не в axios
       });
 
       console.log("[TINKOFF PAYOUT] 📥 Ответ:", data);

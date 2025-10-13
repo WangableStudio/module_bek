@@ -119,7 +119,7 @@ const Payment = sequelize.define("payment", {
   isPaidOut: { type: DataTypes.BOOLEAN, defaultValue: false },
   paymentMethod: { type: DataTypes.STRING, defaultValue: "SBP" },
   contractorId: {
-    type: DataTypes.STRING,
+    type: DataTypes.UUID,
     references: {
       model: Contractors,
       key: "id",
