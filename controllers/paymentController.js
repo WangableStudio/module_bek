@@ -563,7 +563,6 @@ class PaymentController {
   // ✅ Выполнение выплат
   async executePayouts(paymentId) {
     try {
-
       const payment = await Payment.findByPk(paymentId, {
         include: {
           model: Contractors,
@@ -630,8 +629,8 @@ class PaymentController {
           };
 
           if (Object.keys(paymentType).length > 0) {
-            payoutPayload.memberId = '100000000012';
-            payoutPayload.phone = '79066589133';
+            payoutPayload.memberId = "100000000012";
+            payoutPayload.phone = "79066589133";
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
@@ -647,28 +646,28 @@ class PaymentController {
         }
       }
 
-      // Выплата компании
-      if (payment.companyAmount > 0) {
-        try {
-          results.company = await this.sendPayout({
-            paymentId: payment.id,
-            dealId: payment.dealId,
-            partnerId: COMPANY_PARTNER_ID,
-            amount: payment.companyAmount,
-            type: "company",
-            finalPayout: true,
-          });
-          console.log(
-            `[TINKOFF PAYOUT] ✅ Выплата компании завершена (paymentId: ${paymentId})`
-          );
-        } catch (err) {
-          console.error(
-            `[TINKOFF PAYOUT ERROR] ❌ Ошибка выплаты компании:`,
-            err.message
-          );
-          throw ApiError.internal("Ошибка при выплате компании");
-        }
-      }
+      // // Выплата компании
+      // if (payment.companyAmount > 0) {
+      //   try {
+      //     results.company = await this.sendPayout({
+      //       paymentId: payment.id,
+      //       dealId: payment.dealId,
+      //       partnerId: COMPANY_PARTNER_ID,
+      //       amount: payment.companyAmount,
+      //       type: "company",
+      //       finalPayout: true,
+      //     });
+      //     console.log(
+      //       `[TINKOFF PAYOUT] ✅ Выплата компании завершена (paymentId: ${paymentId})`
+      //     );
+      //   } catch (err) {
+      //     console.error(
+      //       `[TINKOFF PAYOUT ERROR] ❌ Ошибка выплаты компании:`,
+      //       err.message
+      //     );
+      //     throw ApiError.internal("Ошибка при выплате компании");
+      //   }
+      // }
 
       await payment.update({
         isPaidOut: true,
