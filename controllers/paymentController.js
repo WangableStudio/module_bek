@@ -592,6 +592,9 @@ class PaymentController {
         );
       }
 
+      console.log(contractor);
+      
+
       if (
         !partnerId &&
         [
@@ -708,7 +711,6 @@ class PaymentController {
       console.log(
         partnerId,
         dealId,
-        partnerId,
         amount,
         type,
         phone,
