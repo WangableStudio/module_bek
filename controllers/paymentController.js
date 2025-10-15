@@ -682,6 +682,9 @@ class PaymentController {
 
       return { success: true, results };
     } catch (err) {
+      console.log(err);
+      console.log('===================');
+      
       console.error(
         `[TINKOFF PAYOUTS ERROR] 🚨`,
         err.response?.data || err.message
@@ -702,6 +705,17 @@ class PaymentController {
     finalPayout = false,
   }) {
     try {
+      console.log(
+        partnerId,
+        dealId,
+        partnerId,
+        amount,
+        type,
+        phone,
+        memberId,
+        finalPayout
+      );
+
       if (!dealId || !amount) {
         throw ApiError.badRequest(
           "Отсутствуют обязательные параметры для выплаты"
@@ -743,7 +757,7 @@ class PaymentController {
       console.log("[TINKOFF PAYOUT] 📥 Ответ:", data);
 
       if (!data.Success) {
-        console.error("[TINKOFF PAYOUT ERROR] ❌", data);
+        console.error("[TINKOFF PAYOUT ERROR2] ❌", data);
         throw ApiError.badRequest(
           data.Message || "Ошибка при выполнении выплаты"
         );
