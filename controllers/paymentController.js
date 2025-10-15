@@ -604,7 +604,7 @@ class PaymentController {
       if (
         !partnerId &&
         [
-          CONTRACTOR_TYPES.INDIVIDUAL,
+          CONTRACTOR_TYPES.IP,
           CONTRACTOR_TYPES.OOO,
           CONTRACTOR_TYPES.LEGAL_ENTITY,
         ].includes(contractor.type)
@@ -622,15 +622,28 @@ class PaymentController {
           const payoutPayload = {
             paymentId: payment.id,
             dealId: payment.dealId,
-            partnerId: partnerId,
             amount: payment.contractorAmount,
             type: "contractor",
-            finalPayout: false,
+            finalPayout: true,
           };
 
-          if (Object.keys(paymentType).length > 0) {
+          if (contractor.type !== CONTRACTOR_TYPES.INDIVIDUAL) {
+            payoutPayload.partnerId = contractor.partnerId;
+          }
+
+          if (
+            contractor.type !==
+            [
+              CONTRACTOR_TYPES.IP,
+              CONTRACTOR_TYPES.OOO,
+              CONTRACTOR_TYPES.LEGAL_ENTITY,
+            ].includes(contractor.type)
+          ) {
             payoutPayload.memberId = "100000000012";
             payoutPayload.phone = "79066589133";
+            // payoutPayload.memberId = contractor.memberId || "100000000012";
+            // payoutPayload.phone =
+            //   contractor.phone?.replace(/\D/g, "") || "79066589133";
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
@@ -711,13 +724,17 @@ class PaymentController {
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
         DealId: dealId,
-        PartnerId: partnerId,
         Amount: amountInKopecks,
-        Phone: phone,
-        PaymentRecipientId: phone,
-        SbpMemberId: memberId,
         OrderId: orderId,
+        PaymentRecipientId: ''
       };
+
+      if (partnerId) payload.PartnerId = partnerId;
+      if (phone) {
+        payload.Phone = phone;
+        payload.PaymentRecipientId = phone;
+      }
+      if (memberId) payload.SbpMemberId = memberId;
 
       if (finalPayout) payload.FinalPayout = true;
       payload.Token = createTinkoffToken(payload);
@@ -725,7 +742,7 @@ class PaymentController {
       console.log("[TINKOFF PAYOUT] 📤 Запрос:", payload);
 
       const { data } = await axios.post(
-        `https://securepay.tinkoff.ru/e2c/v2/Init`,
+        `${TINKOFF_API_URL}/e2c/v2/Init`,
         payload,
         {
           headers: { "Content-Type": "application/json" },
