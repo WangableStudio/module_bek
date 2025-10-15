@@ -592,7 +592,7 @@ class PaymentController {
         );
       }
 
-      console.log(contractor);
+      console.log(contractor.type, contractor.partnerId);
       
 
       if (
@@ -622,6 +622,8 @@ class PaymentController {
           };
 
           if (contractor.type !== CONTRACTOR_TYPES.INDIVIDUAL) {
+            console.log('zzzz');
+            
             payoutPayload.partnerId = contractor.partnerId;
           }
 
@@ -632,6 +634,8 @@ class PaymentController {
               CONTRACTOR_TYPES.LEGAL_ENTITY,
             ].includes(contractor.type)
           ) {
+            console.log('salom');
+            
             payoutPayload.memberId = "100000000012";
             payoutPayload.phone = "79066589133";
             // payoutPayload.memberId = contractor.memberId || "100000000012";
