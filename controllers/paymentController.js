@@ -592,15 +592,6 @@ class PaymentController {
         );
       }
 
-      const paymentType = {};
-
-      let partnerId = contractor.partnerId;
-      if (!partnerId && contractor.type === CONTRACTOR_TYPES.IP) {
-        partnerId = "";
-        paymentType.phone = contractor.phone.replace(/\D/g, "");
-        paymentType.SbpMemberId = contractor.memberId;
-      }
-
       if (
         !partnerId &&
         [
@@ -632,8 +623,7 @@ class PaymentController {
           }
 
           if (
-            contractor.type !==
-            [
+            ![
               CONTRACTOR_TYPES.IP,
               CONTRACTOR_TYPES.OOO,
               CONTRACTOR_TYPES.LEGAL_ENTITY,
@@ -726,7 +716,7 @@ class PaymentController {
         DealId: dealId,
         Amount: amountInKopecks,
         OrderId: orderId,
-        PaymentRecipientId: ''
+        PaymentRecipientId: "",
       };
 
       if (partnerId) payload.PartnerId = partnerId;
