@@ -576,7 +576,11 @@ class PaymentController {
 
       if (payment.isPaidOut) {
         console.log(`[TINKOFF PAYOUTS] 💡 Платеж ${paymentId} уже выплачен`);
-        return { success: true, alreadyPaidOut: true, message: `💡 Платеж ${paymentId} уже выплачен` };
+        return {
+          success: true,
+          alreadyPaidOut: true,
+          message: `💡 Платеж ${paymentId} уже выплачен`,
+        };
       }
 
       if (!payment.dealId) {
@@ -856,16 +860,21 @@ class PaymentController {
   // 📋 Получение статуса платежа
   async getState(req, res, next) {
     try {
-      const { paymentId } = req.params;
+      const { paymentId, type } = req.params;
 
       if (!paymentId) {
         return next(ApiError.badRequest("ID платежа не указан"));
       }
 
       const payload = {
-        TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
+        TerminalKey: TINKOFF_TERMINAL_KEY,
         PaymentId: paymentId,
       };
+
+      if (type === "payout") {
+        payload.TerminalKey = TINKOFF_TERMINAL_KEY_E2C;
+      }
+      console.log(payload);
 
       payload.Token = createTinkoffToken(payload);
 

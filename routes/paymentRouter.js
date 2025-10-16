@@ -8,6 +8,6 @@ router.post('/notification', paymentController.notification);
 router.post('/confirm', paymentController.confirm);
 router.post('/payout', paymentController.payout);
 router.post('/GetSbpMembers', paymentController.GetSbpMembers);
-router.get('/state/:paymentId', paymentController.getState);
+router.get('/state/:paymentId/:type', paymentController.getState);
 
 module.exports = router;
