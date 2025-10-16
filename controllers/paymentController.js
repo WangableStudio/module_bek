@@ -755,8 +755,8 @@ class PaymentController {
 
       await Payout.create({
         id: data.PaymentId,
+        dealId,
         partnerId,
-        PaymentId: paymentId,
         amount: amount / 100,
         status: data.Status,
         type,
@@ -872,9 +872,6 @@ class PaymentController {
 
       payload.Token = createTinkoffToken(payload);
 
-      console.log(payload);
-      
-
       const response = await axios.post(
         `${TINKOFF_API_URL}/v2/GetState`,
         payload,
@@ -885,9 +882,6 @@ class PaymentController {
       );
 
       const data = response.data;
-
-      console.log(data);
-      
 
       if (!data.Success) {
         return next(

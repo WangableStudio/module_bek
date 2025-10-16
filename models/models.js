@@ -129,11 +129,10 @@ const Payment = sequelize.define("payment", {
 });
 
 const Payout = sequelize.define("payout", {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  paymentId: { type: DataTypes.BIGINT, allowNull: false },
-  partnerId: { type: DataTypes.STRING, allowNull: false },
+  id: { type: DataTypes.BIGINT, primaryKey: true },
+  dealId: { type: DataTypes.BIGINT, allowNull: false },
+  partnerId: { type: DataTypes.STRING, allowNull: true },
   amount: { type: DataTypes.DECIMAL(15, 2) },
-  payoutId: { type: DataTypes.STRING },
   status: { type: DataTypes.STRING },
   type: { type: DataTypes.ENUM("contractor", "company") },
   responseData: { type: DataTypes.JSON },
