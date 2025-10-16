@@ -751,14 +751,13 @@ class PaymentController {
         payload,
         {
           headers: { "Content-Type": "application/json" },
-          timeout: 15000,
         }
       );
 
       console.log("[TINKOFF PAYOUT] 📥 Ответ:", data);
 
       if (!data.Success) {
-        console.error("[TINKOFF PAYOUT ERROR2] ❌", data);
+        console.error("[TINKOFF PAYOUT ERROR] ❌", data);
         throw ApiError.badRequest(
           data.Message || "Ошибка при выполнении выплаты"
         );
