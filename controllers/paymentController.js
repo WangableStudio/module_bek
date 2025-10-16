@@ -844,12 +844,9 @@ class PaymentController {
         return next(ApiError.badRequest("ID платежа не указан"));
       }
 
-      await controller.executePayouts(paymentId);
+      const payout = await controller.executePayouts(paymentId);
 
-      return res.json({
-        success: true,
-        message: "Выплаты запущены",
-      });
+      return res.json(payout);
     } catch (err) {
       console.error("[PAYOUT ERROR]", err);
       return next(ApiError.internal("Ошибка при выполнении выплат"));
