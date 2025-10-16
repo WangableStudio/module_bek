@@ -685,8 +685,8 @@ class PaymentController {
       return { success: true, results };
     } catch (err) {
       console.log(err);
-      console.log('===================');
-      
+      console.log("===================");
+
       console.error(
         `[TINKOFF PAYOUTS ERROR] 🚨`,
         err.response?.data || err.message
@@ -707,16 +707,6 @@ class PaymentController {
     finalPayout = false,
   }) {
     try {
-      console.log(
-        partnerId,
-        dealId,
-        amount,
-        type,
-        phone,
-        memberId,
-        finalPayout
-      );
-
       if (!dealId || !amount) {
         throw ApiError.badRequest(
           "Отсутствуют обязательные параметры для выплаты"
@@ -764,10 +754,10 @@ class PaymentController {
       }
 
       await Payout.create({
-        paymentId,
+        id: data.PaymentId,
         partnerId,
-        amount,
-        payoutId: data.PaymentId || data.PayoutId,
+        PaymentId: paymentId,
+        amount: amount / 100,
         status: data.Status,
         type,
         responseData: data,
@@ -920,6 +910,8 @@ class PaymentController {
 
       payload.Token = createTinkoffToken(payload);
 
+      console.log(payload);
+
       const response = await axios.post(
         "https://securepay.tinkoff.ru/a2c/sbp/GetSbpMembers",
         payload,
@@ -934,6 +926,8 @@ class PaymentController {
       if (!data.Success) {
         return next(ApiError.badRequest(data.Message));
       }
+
+      console.log(data);
 
       for (const member of data.Members) {
         await Members.create({
