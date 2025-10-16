@@ -872,6 +872,9 @@ class PaymentController {
 
       payload.Token = createTinkoffToken(payload);
 
+      console.log(payload);
+      
+
       const response = await axios.post(
         `${TINKOFF_API_URL}/v2/GetState`,
         payload,
@@ -882,6 +885,9 @@ class PaymentController {
       );
 
       const data = response.data;
+
+      console.log(data);
+      
 
       if (!data.Success) {
         return next(
@@ -910,8 +916,6 @@ class PaymentController {
 
       payload.Token = createTinkoffToken(payload);
 
-      console.log(payload);
-
       const response = await axios.post(
         "https://securepay.tinkoff.ru/a2c/sbp/GetSbpMembers",
         payload,
@@ -926,8 +930,6 @@ class PaymentController {
       if (!data.Success) {
         return next(ApiError.badRequest(data.Message));
       }
-
-      console.log(data);
 
       for (const member of data.Members) {
         await Members.create({
