@@ -808,7 +808,7 @@ class PaymentController {
   async getTinkoffToken() {
     const TOKEN_URL = "https://acqapi-test.tinkoff.ru/oauth/token";
 
-    const login = TINKOFF_REG_PASSWORD;
+    const login = TINKOFF_REG_LOGIN;
     const password = TINKOFF_REG_PASSWORD;
 
     // Base64("partner:partner")
