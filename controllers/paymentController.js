@@ -189,7 +189,7 @@ class PaymentController {
 
       controller.cleanPayload(payload);
 
-      payload.token = createTinkoffToken(payload);
+      // payload.token = createTinkoffToken(payload);
 
       console.log(
         "[TINKOFF REGISTER PARTNER] 📤 Запрос:",
