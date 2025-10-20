@@ -18,7 +18,6 @@ const {
   TINKOFF_TERMINAL_KEY,
   TINKOFF_TERMINAL_KEY_E2C,
   BACKEND_URL,
-  COMPANY_PARTNER_ID,
   NODE_ENV,
   SERVICE_PROVIDER_EMAIL,
   MCC_CODE,
@@ -155,6 +154,8 @@ class PaymentController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
+      const accessToken = await getTinkoffToken();
+
       const payload = {
         serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
         shopArticleId: `contractor_${contractor.id}`,
@@ -190,7 +191,10 @@ class PaymentController {
         "https://acqapi-test.tinkoff.ru/sm-register/register",
         payload,
         {
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
           timeout: 30000,
           httpsAgent,
           validateStatus: (status) => status < 500, // не кидает 4xx
@@ -789,6 +793,35 @@ class PaymentController {
         err.response?.data || err.message
       );
       throw ApiError.internal("Внутренняя ошибка при отправке выплаты");
+    }
+  }
+
+  async getTinkoffToken() {
+    const TOKEN_URL = "https://acqapi-test.tinkoff.ru/oauth/token";
+
+    const login = process.env.TINKOFF_LOGIN; // выданный банком логин
+    const password = process.env.TINKOFF_PASSWORD; // выданный банком пароль
+
+    const basicAuth = Buffer.from("partner:partner").toString("base64");
+
+    try {
+      const { data } = await axios.post(
+        TOKEN_URL,
+        `grant_type=password&username=${login}&password=${password}`,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Authorization: `Basic ${basicAuth}`,
+          },
+          httpsAgent,
+        }
+      );
+
+      console.log("[TINKOFF TOKEN] ✅ Успешно получен токен");
+      return data.access_token;
+    } catch (err) {
+      console.error("[TINKOFF TOKEN ERROR]", err.response?.data || err.message);
+      throw new Error("Ошибка при получении токена Tinkoff");
     }
   }
 
