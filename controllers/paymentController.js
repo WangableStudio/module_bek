@@ -811,6 +811,9 @@ class PaymentController {
     const login = TINKOFF_REG_LOGIN;
     const password = TINKOFF_REG_PASSWORD;
 
+    console.log(login, password);
+    
+
     // Base64("partner:partner")
     const basicAuth = Buffer.from("partner:partner").toString("base64");
 
@@ -828,7 +831,7 @@ class PaymentController {
       Authorization: `Basic ${basicAuth}`,
       "Content-Type": "application/x-www-form-urlencoded",
     });
-    console.log("🔹 Body:", body.toString());
+    console.log("🔹 Body:", body);
     console.log(
       "===============================================================\n"
     );
