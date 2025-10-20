@@ -1,8 +1,7 @@
 const crypto = require("crypto");
 const axios = require("axios");
-const https = require('https')
-const fs = require('fs')
-
+const https = require("https");
+const fs = require("fs");
 
 const {
   Payment,
@@ -14,8 +13,8 @@ const {
 const ApiError = require("../error/ApiError");
 
 const httpsAgent = new https.Agent({
-  cert: fs.readFileSync("/ssl/open-api-cert.pem"),
-  key: fs.readFileSync("/ssl/private.key"),
+  cert: fs.readFileSync(__dirname + "/../ssl/open-api-cert.pem"),
+  key: fs.readFileSync(__dirname + "/../ssl/private.key"),
 });
 
 const {
