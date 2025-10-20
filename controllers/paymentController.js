@@ -233,10 +233,6 @@ class PaymentController {
         message: "Партнёр успешно зарегистрирован",
       };
     } catch (err) {
-      console.error(
-        "[TINKOFF PARTNER EXCEPTION] 🚨",
-        err.response?.data || err.message
-      );
       throw ApiError.internal("Ошибка при регистрации подрядчика");
     }
   }
