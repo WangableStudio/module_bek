@@ -9,6 +9,11 @@ const {
 } = require("../models/models");
 const ApiError = require("../error/ApiError");
 
+const httpsAgent = new https.Agent({
+  cert: fs.readFileSync("/ssl/open-api-cert.pem"),
+  key: fs.readFileSync("/ssl/private.key"),
+});
+
 const {
   TINKOFF_TERMINAL_KEY,
   TINKOFF_TERMINAL_KEY_E2C,
@@ -151,7 +156,6 @@ class PaymentController {
       }
 
       const payload = {
-        terminalKey: TINKOFF_TERMINAL_KEY,
         serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
         shopArticleId: `contractor_${contractor.id}`,
         billingDescriptor: contractor.name,
@@ -188,6 +192,7 @@ class PaymentController {
         {
           headers: { "Content-Type": "application/json" },
           timeout: 30000,
+          httpsAgent,
           validateStatus: (status) => status < 500, // не кидает 4xx
         }
       );
