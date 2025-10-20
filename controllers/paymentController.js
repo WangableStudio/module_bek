@@ -210,17 +210,17 @@ class PaymentController {
         }
       );
 
-      console.log(
-        "[TINKOFF REGISTER PARTNER] 📥 Ответ:",
-        JSON.stringify(data, null, 2)
-      );
-
       if (!data.success) {
         console.error("[TINKOFF PARTNER ERROR]", data);
         throw ApiError.badRequest(
           data.message || "Ошибка регистрации партнёра в Tinkoff"
         );
       }
+
+      console.log(
+        "[TINKOFF REGISTER PARTNER] 📥 Ответ:",
+        JSON.stringify(data, null, 2)
+      );
 
       await contractor.update({ partnerId: data.partnerId });
       console.log(
@@ -811,10 +811,6 @@ class PaymentController {
     const login = TINKOFF_REG_LOGIN;
     const password = TINKOFF_REG_PASSWORD;
 
-    console.log(login, password);
-    
-
-    // Base64("partner:partner")
     const basicAuth = Buffer.from("partner:partner").toString("base64");
 
     const body = new URLSearchParams({
@@ -823,26 +819,13 @@ class PaymentController {
       password: password,
     });
 
-    console.log(
-      "\n==================== TINKOFF TOKEN REQUEST ===================="
-    );
-    console.log("🔹 URL:", TOKEN_URL);
-    console.log("🔹 Headers:", {
-      Authorization: `Basic ${basicAuth}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    });
-    console.log("🔹 Body:", body);
-    console.log(
-      "===============================================================\n"
-    );
-
     try {
       const { data } = await axios.post(TOKEN_URL, body, {
         headers: {
           Authorization: `Basic ${basicAuth}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        httpsAgent
+        httpsAgent,
       });
 
       console.log("[TINKOFF TOKEN] ✅ Успешно получен токен");
