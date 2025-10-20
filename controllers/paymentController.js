@@ -24,6 +24,8 @@ const {
   NODE_ENV,
   SERVICE_PROVIDER_EMAIL,
   MCC_CODE,
+  TINKOFF_REG_LOGIN,
+  TINKOFF_REG_PASSWORD,
 } = process.env;
 const TINKOFF_PASSWORD = "gP3PIYw*xe5L#$9G";
 
@@ -158,9 +160,9 @@ class PaymentController {
       }
 
       const accessToken = await controller.getTinkoffToken();
-      
-      if(!accessToken){
-        throw ApiError.badRequest('Не удалось получить токен')
+
+      if (!accessToken) {
+        throw ApiError.badRequest("Не удалось получить токен");
       }
 
       const payload = {
@@ -806,21 +808,25 @@ class PaymentController {
   async getTinkoffToken() {
     const TOKEN_URL = "https://acqapi-test.tinkoff.ru/oauth/token";
 
-    const login = process.env.TINKOFF_LOGIN; // выданный банком логин
-    const password = process.env.TINKOFF_PASSWORD; // выданный банком пароль
+    const login = TINKOFF_REG_PASSWORD;
+    const password = TINKOFF_REG_PASSWORD;
 
+    // Base64("partner:partner")
     const basicAuth = Buffer.from("partner:partner").toString("base64");
 
     try {
       const { data } = await axios.post(
         TOKEN_URL,
-        `grant_type=password&username=${login}&password=${password}`,
+        new URLSearchParams({
+          grant_type: "password",
+          username: login,
+          password: password,
+        }),
         {
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
             Authorization: `Basic ${basicAuth}`,
+            "Content-Type": "application/x-www-form-urlencoded",
           },
-          httpsAgent,
         }
       );
 
