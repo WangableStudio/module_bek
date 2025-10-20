@@ -839,6 +839,7 @@ class PaymentController {
           Authorization: `Basic ${basicAuth}`,
           "Content-Type": "application/x-www-form-urlencoded",
         },
+        httpsAgent
       });
 
       console.log("[TINKOFF TOKEN] ✅ Успешно получен токен");
