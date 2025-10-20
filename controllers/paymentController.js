@@ -158,6 +158,10 @@ class PaymentController {
       }
 
       const accessToken = await controller.getTinkoffToken();
+      
+      if(!accessToken){
+        throw ApiError.badRequest('Не удалось получить токен')
+      }
 
       const payload = {
         serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
