@@ -814,21 +814,32 @@ class PaymentController {
     // Base64("partner:partner")
     const basicAuth = Buffer.from("partner:partner").toString("base64");
 
+    const body = new URLSearchParams({
+      grant_type: "password",
+      username: login,
+      password: password,
+    });
+
+    console.log(
+      "\n==================== TINKOFF TOKEN REQUEST ===================="
+    );
+    console.log("🔹 URL:", TOKEN_URL);
+    console.log("🔹 Headers:", {
+      Authorization: `Basic ${basicAuth}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    });
+    console.log("🔹 Body:", body.toString());
+    console.log(
+      "===============================================================\n"
+    );
+
     try {
-      const { data } = await axios.post(
-        TOKEN_URL,
-        new URLSearchParams({
-          grant_type: "password",
-          username: login,
-          password: password,
-        }),
-        {
-          headers: {
-            Authorization: `Basic ${basicAuth}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      const { data } = await axios.post(TOKEN_URL, body, {
+        headers: {
+          Authorization: `Basic ${basicAuth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
       console.log("[TINKOFF TOKEN] ✅ Успешно получен токен");
       return data.access_token;
