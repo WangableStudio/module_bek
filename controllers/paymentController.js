@@ -157,7 +157,7 @@ class PaymentController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
-      const accessToken = await getTinkoffToken();
+      const accessToken = await controller.getTinkoffToken();
 
       const payload = {
         serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
