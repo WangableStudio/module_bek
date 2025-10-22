@@ -164,6 +164,8 @@ class PaymentController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
+      console.log("regggg", TINKOFF_API_REG_URL);
+
       const accessToken = await controller.getTinkoffToken();
 
       if (!accessToken) {
@@ -808,7 +810,7 @@ class PaymentController {
 
   async getTinkoffToken() {
     const TOKEN_URL = `${TINKOFF_API_REG_URL}/oauth/token`;
-
+    console.log(TINKOFF_API_REG_URL);
     const login = TINKOFF_REG_LOGIN;
     const password = TINKOFF_REG_PASSWORD;
 
