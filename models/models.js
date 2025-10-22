@@ -80,6 +80,7 @@ const Contractors = sequelize.define("contractors", {
   bankAccount: { type: DataTypes.STRING },
   bankName: { type: DataTypes.STRING },
   bankBik: { type: DataTypes.STRING },
+  bankCorrespondentAccount: { type: DataTypes.STRING },
 
   // Дополнительные поля для регистрации
   fullName: { type: DataTypes.STRING }, // Полное наименование

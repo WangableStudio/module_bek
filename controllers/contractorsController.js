@@ -44,6 +44,7 @@ class ContractorsController {
         bankName,
         bankAccount,
         bankBik,
+        bankCorrespondentAccount,
 
         // Руководитель
         ceoFirstName,
@@ -129,6 +130,7 @@ class ContractorsController {
         bankName,
         bankAccount,
         bankBik,
+        bankCorrespondentAccount,
 
         // Руководитель
         ceoFirstName,
@@ -221,6 +223,7 @@ class ContractorsController {
         bankName,
         bankAccount,
         bankBik,
+        bankCorrespondentAccount,
 
         // Руководитель
         ceoFirstName,
@@ -274,6 +277,8 @@ class ContractorsController {
         bankName: bankName ?? contractor.bankName,
         bankAccount: bankAccount ?? contractor.bankAccount,
         bankBik: bankBik ?? contractor.bankBik,
+        bankCorrespondentAccount:
+          bankCorrespondentAccount ?? contractor.bankCorrespondentAccount,
 
         // Руководитель
         ceoFirstName: ceoFirstName ?? contractor.ceoFirstName,
