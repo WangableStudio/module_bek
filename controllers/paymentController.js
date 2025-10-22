@@ -34,11 +34,6 @@ const TINKOFF_API_URL =
     ? "https://securepay.tinkoff.ru"
     : "https://rest-api-test.tinkoff.ru";
 
-const TINKOFF_API_REG_URL =
-  NODE_ENV === "production"
-    ? "https://acqapi.tinkoff.ru"
-    : "https://acqapi-test.tinkoff.ru";
-
 function createTinkoffToken(payload, password = TINKOFF_PASSWORD) {
   const filtered = {};
   for (const key in payload) {
@@ -164,8 +159,6 @@ class PaymentController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
-      console.log("regggg", TINKOFF_API_REG_URL);
-
       const accessToken = await controller.getTinkoffToken();
 
       if (!accessToken) {
@@ -204,7 +197,7 @@ class PaymentController {
       );
 
       const { data } = await axios.post(
-        `${TINKOFF_API_REG_URL}/sm-register/register`,
+        "https://acqapi-test.tinkoff.ru/sm-register/register",
         payload,
         {
           headers: {
@@ -809,8 +802,8 @@ class PaymentController {
   }
 
   async getTinkoffToken() {
-    const TOKEN_URL = `${TINKOFF_API_REG_URL}/oauth/token`;
-    console.log(TOKEN_URL);
+    const TOKEN_URL = "https://acqapi-test.tinkoff.ru/oauth/token";
+
     const login = TINKOFF_REG_LOGIN;
     const password = TINKOFF_REG_PASSWORD;
 
@@ -969,7 +962,7 @@ class PaymentController {
       payload.Token = createTinkoffToken(payload);
 
       const response = await axios.post(
-        `${TINKOFF_API_URL}/a2c/sbp/GetSbpMembers`,
+        "https://securepay.tinkoff.ru/a2c/sbp/GetSbpMembers",
         payload,
         {
           headers: { "Content-Type": "application/json" },
