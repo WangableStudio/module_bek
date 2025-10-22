@@ -810,7 +810,7 @@ class PaymentController {
 
   async getTinkoffToken() {
     const TOKEN_URL = `${TINKOFF_API_REG_URL}/oauth/token`;
-    console.log(TINKOFF_API_REG_URL);
+    console.log(TOKEN_URL);
     const login = TINKOFF_REG_LOGIN;
     const password = TINKOFF_REG_PASSWORD;
 
