@@ -1,5 +1,24 @@
 const ApiError = require("../error/ApiError");
-const { Contractors, User, Members, CONTRACTOR_TYPES } = require("../models/models");
+const {
+  Contractors,
+  User,
+  Members,
+  CONTRACTOR_TYPES,
+} = require("../models/models");
+
+const httpsAgent = new https.Agent({
+  cert: fs.readFileSync(__dirname + "/../ssl/open-api-cert.pem"),
+  key: fs.readFileSync(__dirname + "/../ssl/private.key"),
+});
+
+const {
+  BACKEND_URL,
+  NODE_ENV,
+  SERVICE_PROVIDER_EMAIL,
+  MCC_CODE,
+  TINKOFF_REG_LOGIN,
+  TINKOFF_REG_PASSWORD,
+} = process.env;
 
 function validateINN(inn) {
   if (!inn) return false;
@@ -13,6 +32,12 @@ function validateINN(inn) {
 function validateBankDetails(accountNumber, bik) {
   return accountNumber && accountNumber.length >= 20 && bik && bik.length === 9;
 }
+
+const TINKOFF_API_REG_URL =
+  NODE_ENV === "production"
+    ? "https://acqapi.tinkoff.ru"
+    : "https://acqapi-test.tinkoff.ru";
+
 class ContractorsController {
   async create(req, res, next) {
     try {
@@ -310,6 +335,37 @@ class ContractorsController {
     }
   }
 
+  async getTinkoffToken() {
+    const TOKEN_URL = `${TINKOFF_API_REG_URL}/oauth/token`;
+    console.log(TOKEN_URL);
+    const login = TINKOFF_REG_LOGIN;
+    const password = TINKOFF_REG_PASSWORD;
+
+    const basicAuth = Buffer.from("partner:partner").toString("base64");
+
+    const body = new URLSearchParams({
+      grant_type: "password",
+      username: login,
+      password: password,
+    });
+
+    try {
+      const { data } = await axios.post(TOKEN_URL, body, {
+        headers: {
+          Authorization: `Basic ${basicAuth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        httpsAgent,
+      });
+
+      console.log("[TINKOFF TOKEN] ✅ Успешно получен токен");
+      return data.access_token;
+    } catch (err) {
+      console.error("[TINKOFF TOKEN ERROR]", err.response?.data || err.message);
+      throw new Error("Ошибка при получении токена Tinkoff");
+    }
+  }
+
   // 👥 Регистрация подрядчика с полными данными
   async registerContractor(contractor) {
     try {
@@ -393,6 +449,7 @@ class ContractorsController {
         message: "Партнёр успешно зарегистрирован",
       };
     } catch (err) {
+      console.log(err);
       throw ApiError.internal("Ошибка при регистрации подрядчика");
     }
   }
@@ -411,8 +468,16 @@ class ContractorsController {
         return next(ApiError.badRequest("Подрядчик не найден"));
       }
 
-      if(![CONTRACTOR_TYPES.IP, CONTRACTOR_TYPES.OOO, CONTRACTOR_TYPES.LEGAL_ENTITY].includes(contractor.type)) {
-        return next(ApiError.badRequest("Подрядчик должен быть юрлицом для регистратции"));
+      if (
+        ![
+          CONTRACTOR_TYPES.IP,
+          CONTRACTOR_TYPES.OOO,
+          CONTRACTOR_TYPES.LEGAL_ENTITY,
+        ].includes(contractor.type)
+      ) {
+        return next(
+          ApiError.badRequest("Подрядчик должен быть юрлицом для регистратции")
+        );
       }
 
       const result = await controller.registerContractor(contractor);

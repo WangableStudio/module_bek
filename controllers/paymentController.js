@@ -12,11 +12,6 @@ const {
 } = require("../models/models");
 const ApiError = require("../error/ApiError");
 
-const httpsAgent = new https.Agent({
-  cert: fs.readFileSync(__dirname + "/../ssl/open-api-cert.pem"),
-  key: fs.readFileSync(__dirname + "/../ssl/private.key"),
-});
-
 const {
   TINKOFF_TERMINAL_KEY,
   TINKOFF_TERMINAL_KEY_E2C,
@@ -33,11 +28,6 @@ const TINKOFF_API_URL =
   NODE_ENV === "production"
     ? "https://securepay.tinkoff.ru"
     : "https://rest-api-test.tinkoff.ru";
-
-const TINKOFF_API_REG_URL =
-  NODE_ENV === "production"
-    ? "https://acqapi.tinkoff.ru"
-    : "https://acqapi-test.tinkoff.ru";
 
 function createTinkoffToken(payload, password = TINKOFF_PASSWORD) {
   const filtered = {};
@@ -723,37 +713,6 @@ class PaymentController {
         err.response?.data || err.message
       );
       throw ApiError.internal("Внутренняя ошибка при отправке выплаты");
-    }
-  }
-
-  async getTinkoffToken() {
-    const TOKEN_URL = `${TINKOFF_API_REG_URL}/oauth/token`;
-    console.log(TOKEN_URL);
-    const login = TINKOFF_REG_LOGIN;
-    const password = TINKOFF_REG_PASSWORD;
-
-    const basicAuth = Buffer.from("partner:partner").toString("base64");
-
-    const body = new URLSearchParams({
-      grant_type: "password",
-      username: login,
-      password: password,
-    });
-
-    try {
-      const { data } = await axios.post(TOKEN_URL, body, {
-        headers: {
-          Authorization: `Basic ${basicAuth}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        httpsAgent,
-      });
-
-      console.log("[TINKOFF TOKEN] ✅ Успешно получен токен");
-      return data.access_token;
-    } catch (err) {
-      console.error("[TINKOFF TOKEN ERROR]", err.response?.data || err.message);
-      throw new Error("Ошибка при получении токена Tinkoff");
     }
   }
 
