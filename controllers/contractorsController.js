@@ -452,7 +452,6 @@ class ContractorsController {
         message: "Партнёр успешно зарегистрирован",
       };
     } catch (err) {
-      console.log(err);
       throw ApiError.internal("Ошибка при регистрации подрядчика");
     }
   }
