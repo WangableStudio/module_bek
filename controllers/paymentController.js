@@ -626,9 +626,9 @@ class PaymentController {
       if (type === "payout") {
         payload.TerminalKey = TINKOFF_TERMINAL_KEY_E2C;
       }
-      console.log(payload);
-
+      
       payload.Token = createTinkoffToken(payload);
+      console.log(payload);
 
       const response = await axios.post(
         `${TINKOFF_API_URL}/v2/GetState`,
