@@ -386,7 +386,6 @@ class ContractorsController {
 
       const payload = {
         serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
-        shopArticleId: `contractor_${contractor.id}`,
         billingDescriptor: contractor.name,
         fullName: contractor.fullName || contractor.name,
         name: contractor.name,
