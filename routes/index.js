@@ -12,6 +12,5 @@ router.use("/contractors", contractorsRouter);
 router.use("/nomenclature", nomenclatureRouter);
 router.use("/company", companyRouter);
 router.use("/payment", paymentRouter);
-router.use('/partners', partnerRouter);
 
 module.exports = router;

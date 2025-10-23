@@ -157,93 +157,6 @@ class PaymentController {
     }
   }
 
-  // 👥 Регистрация подрядчика с полными данными
-  async registerContractor(contractor) {
-    try {
-      if (!contractor || !contractor.id) {
-        throw ApiError.badRequest("Некорректные данные подрядчика");
-      }
-
-      console.log("regggg", TINKOFF_API_REG_URL);
-
-      const accessToken = await controller.getTinkoffToken();
-
-      if (!accessToken) {
-        throw ApiError.badRequest("Не удалось получить токен");
-      }
-
-      const payload = {
-        serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
-        shopArticleId: `contractor_${contractor.id}`,
-        billingDescriptor: contractor.name,
-        fullName: contractor.fullName || contractor.name,
-        name: contractor.name,
-        inn: contractor.inn,
-        kpp: contractor.kpp || "000000000",
-        okved: contractor.okved,
-        ogrn: parseInt(contractor.ogrn) || 0,
-        email: contractor.email,
-        siteUrl: BACKEND_URL,
-      };
-
-      if (MCC_CODE) {
-        payload.mcc = parseInt(MCC_CODE);
-      }
-
-      payload.addresses = controller.formatAddresses(contractor);
-      payload.ceo = controller.formatCEO(contractor);
-      payload.bankAccount = controller.formatBankAccount(contractor);
-
-      controller.cleanPayload(payload);
-
-      // payload.token = createTinkoffToken(payload);
-
-      console.log(
-        "[TINKOFF REGISTER PARTNER] 📤 Запрос:",
-        JSON.stringify(payload, null, 2)
-      );
-
-      const { data } = await axios.post(
-        `${TINKOFF_API_REG_URL}/sm-register/register`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          timeout: 30000,
-          httpsAgent,
-          validateStatus: (status) => status < 500, // не кидает 4xx
-        }
-      );
-
-      if (!data.success) {
-        console.error("[TINKOFF PARTNER ERROR]", data);
-        throw ApiError.badRequest(
-          data.message || "Ошибка регистрации партнёра в Tinkoff"
-        );
-      }
-
-      console.log(
-        "[TINKOFF REGISTER PARTNER] 📥 Ответ:",
-        JSON.stringify(data, null, 2)
-      );
-
-      await contractor.update({ partnerId: data.partnerId });
-      console.log(
-        `[TINKOFF PARTNER] ✅ Подрядчик ${contractor.id} успешно зарегистрирован (PartnerId: ${data.partnerId})`
-      );
-
-      return {
-        success: true,
-        partnerId: data.partnerId,
-        message: "Партнёр успешно зарегистрирован",
-      };
-    } catch (err) {
-      throw ApiError.internal("Ошибка при регистрации подрядчика");
-    }
-  }
-
   // 🏠 Форматирование адресов
   formatAddresses(contractor) {
     const addresses = [];
@@ -645,7 +558,12 @@ class PaymentController {
             finalPayout: true,
           };
 
-          if (contractor.type !== CONTRACTOR_TYPES.INDIVIDUAL) {
+          if (
+            ![
+              CONTRACTOR_TYPES.INDIVIDUAL,
+              CONTRACTOR_TYPES.SELF_EMPLOYED,
+            ].includes(contractor.type)
+          ) {
             payoutPayload.partnerId = contractor.partnerId;
           }
 
@@ -839,36 +757,6 @@ class PaymentController {
     }
   }
 
-  // 🧾 Ручная регистрация подрядчика
-  async registerPartner(req, res, next) {
-    try {
-      const { contractorId } = req.body;
-
-      if (!contractorId) {
-        return next(ApiError.badRequest("ID подрядчика не указан"));
-      }
-
-      const contractor = await Contractors.findByPk(contractorId);
-      if (!contractor) {
-        return next(ApiError.badRequest("Подрядчик не найден"));
-      }
-
-      const result = await controller.registerContractor(contractor);
-
-      return res.json({
-        success: true,
-        partnerId: result.partnerId,
-        contractor: {
-          id: contractor.id,
-          name: contractor.name,
-        },
-      });
-    } catch (err) {
-      console.error("[PARTNER REGISTER ERROR]", err);
-      return next(ApiError.internal("Ошибка при регистрации подрядчика"));
-    }
-  }
-
   // 📊 Ручное подтверждение платежа
   async confirm(req, res, next) {
     try {
@@ -999,17 +887,6 @@ class PaymentController {
           "Ошибка при получение списка идентификаторов банков, участвующих в СБП."
         )
       );
-    }
-  }
-
-  async getBankName(req, res, next) {
-    try {
-      const members = await Members.findAll();
-
-      return res.json(members);
-    } catch (err) {
-      console.error(err);
-      return next(ApiError.badRequest("Ошибка при получении банков"));
     }
   }
 }
