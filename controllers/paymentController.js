@@ -1,7 +1,5 @@
 const crypto = require("crypto");
 const axios = require("axios");
-const https = require("https");
-const fs = require("fs");
 
 const {
   Payment,
@@ -17,10 +15,6 @@ const {
   TINKOFF_TERMINAL_KEY_E2C,
   BACKEND_URL,
   NODE_ENV,
-  SERVICE_PROVIDER_EMAIL,
-  MCC_CODE,
-  TINKOFF_REG_LOGIN,
-  TINKOFF_REG_PASSWORD,
 } = process.env;
 const TINKOFF_PASSWORD = "gP3PIYw*xe5L#$9G";
 
