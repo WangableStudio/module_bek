@@ -626,9 +626,9 @@ class PaymentController {
       if (type === "payout") {
         payload.TerminalKey = TINKOFF_TERMINAL_KEY_E2C;
       }
-      
-      console.log(payload);
+
       payload.Token = createTinkoffToken(payload);
+      console.log(payload);
 
       const response = await axios.post(
         `${TINKOFF_API_URL}/v2/GetState`,
@@ -699,6 +699,16 @@ class PaymentController {
           "Ошибка при получение списка идентификаторов банков, участвующих в СБП."
         )
       );
+    }
+  }
+  async getPaymentByOrderId(req, res, next) {
+    try {
+      const { orderId } = req.params;
+      const payment = await Payment.findOne({ where: { orderId: orderId } });
+      return res.json(payment);
+    } catch (err) {
+      console.error(err);
+      ApiError.badRequest("Ошибка при получение платежа");
     }
   }
 }
