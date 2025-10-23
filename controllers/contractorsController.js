@@ -422,9 +422,7 @@ class ContractorsController {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          timeout: 30000,
-          httpsAgent,
-          validateStatus: (status) => status < 500, // не кидает 4xx
+          httpsAgent
         }
       );
 
