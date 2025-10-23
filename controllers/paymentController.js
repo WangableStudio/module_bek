@@ -706,7 +706,7 @@ class PaymentController {
       const { orderId } = req.params;
       const payment = await Payment.findOne({ where: { orderId: orderId } });
       const payout = await Payout.findOne({ where: { dealId: payment.dealId } });
-      return res.json(payout);
+      return res.json({payout, payment});
     } catch (err) {
       console.error(err);
       ApiError.badRequest("Ошибка при получение платежа");
