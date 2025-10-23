@@ -376,7 +376,7 @@ class ContractorsController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
-      console.log("regggg", TINKOFF_API_REG_URL);
+      console.warn("regggg", TINKOFF_API_REG_URL);
 
       const accessToken = await controller.getTinkoffToken();
 
@@ -422,7 +422,7 @@ class ContractorsController {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          httpsAgent
+          httpsAgent,
         }
       );
 
@@ -449,7 +449,7 @@ class ContractorsController {
         message: "Партнёр успешно зарегистрирован",
       };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       throw ApiError.internal("Ошибка при регистрации подрядчика");
     }
   }
