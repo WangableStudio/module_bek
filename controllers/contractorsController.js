@@ -1,10 +1,5 @@
 const ApiError = require("../error/ApiError");
-const {
-  Contractors,
-  User,
-  Members,
-  CONTRACTOR_TYPES,
-} = require("../models/models");
+const { Contractors, User, Members, CONTRACTOR_TYPES } = require("../models/models");
 
 function validateINN(inn) {
   if (!inn) return false;
@@ -416,16 +411,8 @@ class ContractorsController {
         return next(ApiError.badRequest("Подрядчик не найден"));
       }
 
-      if (
-        ![
-          CONTRACTOR_TYPES.IP,
-          CONTRACTOR_TYPES.OOO,
-          CONTRACTOR_TYPES.LEGAL_ENTITY,
-        ].includes(contractor.type)
-      ) {
-        return next(
-          ApiError.badRequest("Подрядчик должен быть юрлицом для регистратции")
-        );
+      if(![CONTRACTOR_TYPES.IP, CONTRACTOR_TYPES.OOO, CONTRACTOR_TYPES.LEGAL_ENTITY].includes(contractor.type)) {
+        return next(ApiError.badRequest("Подрядчик должен быть юрлицом для регистратции"));
       }
 
       const result = await controller.registerContractor(contractor);
@@ -449,9 +436,7 @@ class ContractorsController {
 
       return res.json(members);
     } catch (err) {
-      console.log("==============================");
-      console.log(err);
-      console.log("==============================");
+      console.error(err);
       return next(ApiError.badRequest("Ошибка при получении банков"));
     }
   }
