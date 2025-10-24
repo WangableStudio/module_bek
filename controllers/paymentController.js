@@ -416,11 +416,11 @@ class PaymentController {
               CONTRACTOR_TYPES.LEGAL_ENTITY,
             ].includes(contractor.type)
           ) {
-            payoutPayload.memberId = "100000000012";
-            payoutPayload.phone = "79066589133";
-            // payoutPayload.memberId = contractor.memberId || "100000000012";
-            // payoutPayload.phone =
-            //   contractor.phone?.replace(/\D/g, "") || "79066589133";
+            // payoutPayload.memberId = "100000000012";
+            // payoutPayload.phone = "79066589133";
+            payoutPayload.memberId = contractor.memberId || "100000000012";
+            payoutPayload.phone =
+              contractor.phone?.replace(/\D/g, "") || "79066589133";
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
@@ -459,8 +459,15 @@ class PaymentController {
       //   }
       // }
 
+      let paymentMethod = "SBP"; // по дефолту
+
+      if (contractor.partnerId) {
+        paymentMethod = "Оплата картой";
+      }
+
       await payment.update({
         isPaidOut: true,
+        paymentMethod,
       });
 
       console.log(
@@ -469,9 +476,6 @@ class PaymentController {
 
       return { success: true, results };
     } catch (err) {
-      console.log(err);
-      console.log("===================");
-
       console.error(
         `[TINKOFF PAYOUTS ERROR] 🚨`,
         err.response?.data || err.message
@@ -704,8 +708,10 @@ class PaymentController {
     try {
       const { orderId } = req.params;
       const payment = await Payment.findOne({ where: { orderId: orderId } });
-      const payout = await Payout.findOne({ where: { dealId: payment.dealId } });
-      return res.json({payout, payment});
+      const payout = await Payout.findOne({
+        where: { dealId: payment.dealId },
+      });
+      return res.json({ payout, payment });
     } catch (err) {
       console.error(err);
       ApiError.badRequest("Ошибка при получение платежа");
