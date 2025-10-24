@@ -376,7 +376,7 @@ class ContractorsController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
-      console.warn("regggg", TINKOFF_API_REG_URL);
+      console.log("regggg", TINKOFF_API_REG_URL);
 
       const accessToken = await controller.getTinkoffToken();
 
@@ -426,17 +426,17 @@ class ContractorsController {
         }
       );
 
+      console.log(
+        "[TINKOFF REGISTER PARTNER] 📥 Ответ:",
+        JSON.stringify(data, null, 2)
+      );
+      
       if (!data.success) {
         console.error("[TINKOFF PARTNER ERROR]", data);
         throw ApiError.badRequest(
           data.message || "Ошибка регистрации партнёра в Tinkoff"
         );
       }
-
-      console.log(
-        "[TINKOFF REGISTER PARTNER] 📥 Ответ:",
-        JSON.stringify(data, null, 2)
-      );
 
       await contractor.update({ partnerId: data.partnerId });
       console.log(
