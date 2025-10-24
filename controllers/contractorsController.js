@@ -376,6 +376,10 @@ class ContractorsController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
+      if(contractor.partnerId){
+        throw ApiError.badRequest("Подрядчик уже зарегистрирован");
+      }
+
       console.log("regggg", TINKOFF_API_REG_URL);
 
       const accessToken = await controller.getTinkoffToken();
@@ -430,22 +434,15 @@ class ContractorsController {
         "[TINKOFF REGISTER PARTNER] 📥 Ответ:",
         JSON.stringify(data, null, 2)
       );
-      
-      if (!data.success) {
-        console.error("[TINKOFF PARTNER ERROR]", data);
-        throw ApiError.badRequest(
-          data.message || "Ошибка регистрации партнёра в Tinkoff"
-        );
-      }
 
-      await contractor.update({ partnerId: data.partnerId });
+      await contractor.update({ partnerId: data.shopCode });
       console.log(
         `[TINKOFF PARTNER] ✅ Подрядчик ${contractor.id} успешно зарегистрирован (PartnerId: ${data.partnerId})`
       );
 
       return {
         success: true,
-        partnerId: data.partnerId,
+        partnerId: data.shopCode,
         message: "Партнёр успешно зарегистрирован",
       };
     } catch (err) {
