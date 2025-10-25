@@ -437,7 +437,7 @@ class ContractorsController {
 
       await contractor.update({ partnerId: data.shopCode });
       console.log(
-        `[TINKOFF PARTNER] ✅ Подрядчик ${contractor.id} успешно зарегистрирован (PartnerId: ${data.partnerId})`
+        `[TINKOFF PARTNER] ✅ Подрядчик ${contractor.id} успешно зарегистрирован (PartnerId: ${data.shopCode})`
       );
 
       return {
