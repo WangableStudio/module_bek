@@ -351,7 +351,7 @@ class PaymentController {
       }
 
       if (payment.isPaidOut) {
-        console.log(`[TINKOFF PAYOUTS] 💡 Платеж ${paymentId} уже выплачен`);
+        // console.log(`[TINKOFF PAYOUTS] 💡 Платеж ${paymentId} уже выплачен`);
         return {
           success: true,
           alreadyPaidOut: true,
@@ -556,6 +556,10 @@ class PaymentController {
         `[TINKOFF PAYOUT] ✅ Выплата успешно создана (paymentId: ${paymentId}, type: ${type})`
       );
 
+      if (partnerId){
+        await controller.paymentMethod(data.PaymentId);
+      }
+
       return {
         success: true,
         payoutId: data.PaymentId,
@@ -569,6 +573,36 @@ class PaymentController {
         err.response?.data || err.message
       );
       throw ApiError.internal("Внутренняя ошибка при отправке выплаты");
+    }
+  }
+
+  async paymentMethod(paymentId) {
+    try {
+      const payload = {
+        TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
+        paymentId,
+      };
+      payload.Token = createTinkoffToken(payload);
+      console.log(payload);
+      const { data } = await axios.post(
+        `${TINKOFF_API_URL}/e2c/v2/Payment`,
+        payload,
+        {
+          headers: { "Content-Type": "application/json" },
+          timeout: 30000,
+        }
+      );
+
+      console.log(data);
+
+      if (!data.Success) {
+        throw ApiError.badRequest(
+          data.Message || "Ошибка при попалнении карты"
+        );
+      }
+      return data;
+    } catch (err) {
+      throw ApiError.internal("Внутренняя ошибка при попалнение карты");
     }
   }
 
