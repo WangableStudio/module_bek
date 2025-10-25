@@ -576,11 +576,13 @@ class PaymentController {
     }
   }
 
-  async getPayment(paymentId) {
+  async getPayment(payoutId) {
     try {
+      const payout = await Payout.findByPk(payoutId);
+
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
-        PaymentId: paymentId,
+        PaymentId: payoutId,
       };
       payload.Token = createTinkoffToken(payload);
       console.log(payload);
@@ -600,6 +602,12 @@ class PaymentController {
           data.Message || "Ошибка при попалнении карты"
         );
       }
+
+      await Payout.update({
+        status: data.Status,
+        responseData: { ...payout.responseData, complated: { data } },
+      });
+
       return data;
     } catch (err) {
       throw ApiError.internal("Внутренняя ошибка при попалнение карты");
