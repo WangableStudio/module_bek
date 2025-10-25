@@ -556,8 +556,8 @@ class PaymentController {
         `[TINKOFF PAYOUT] ✅ Выплата успешно создана (paymentId: ${paymentId}, type: ${type})`
       );
 
-      if (partnerId){
-        await controller.paymentMethod(data.PaymentId);
+      if (partnerId) {
+        await controller.getPayment(data.PaymentId);
       }
 
       return {
@@ -576,7 +576,7 @@ class PaymentController {
     }
   }
 
-  async paymentMethod(paymentId) {
+  async getPayment(paymentId) {
     try {
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
@@ -603,6 +603,18 @@ class PaymentController {
       return data;
     } catch (err) {
       throw ApiError.internal("Внутренняя ошибка при попалнение карты");
+    }
+  }
+
+  // 📋 Получение платежа
+  async payment(req, res, next) {
+    try {
+      const { paymentId } = req.body;
+      const payment = await controller.getPayment(paymentId);
+      return res.json(payment);
+    } catch (err) {
+      console.error("[GET PAYMENT ERROR]", err);
+      return next(ApiError.internal("Ошибка при получение платежа"));
     }
   }
 

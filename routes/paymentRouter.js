@@ -7,6 +7,7 @@ router.post('/init', paymentController.init);
 router.post('/notification', paymentController.notification);
 router.post('/confirm', paymentController.confirm);
 router.post('/payout', paymentController.payout);
+router.post('/payment', paymentController.payment);
 router.post('/GetSbpMembers', paymentController.GetSbpMembers);
 router.get('/:orderId', paymentController.getPaymentByOrderId)
 router.get('/state/:paymentId/:type', paymentController.getState);
