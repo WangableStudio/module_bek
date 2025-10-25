@@ -462,7 +462,7 @@ class ContractorsController {
       }
 
       if (contractor.partnerId) {
-        throw ApiError.badRequest("Подрядчик уже зарегистрирован");
+        return next(ApiError.badRequest("Подрядчик уже зарегистрирован"));
       }
 
       if (
