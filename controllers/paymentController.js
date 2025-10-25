@@ -580,7 +580,7 @@ class PaymentController {
     try {
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
-        paymentId,
+        PaymentId: paymentId,
       };
       payload.Token = createTinkoffToken(payload);
       console.log(payload);
