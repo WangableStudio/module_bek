@@ -418,9 +418,9 @@ class PaymentController {
           ) {
             // payoutPayload.memberId = "100000000012";
             // payoutPayload.phone = "79066589133";
-            payoutPayload.memberId = contractor.memberId || "100000000012";
+            payoutPayload.memberId = contractor.memberId;
             payoutPayload.phone =
-              contractor.phone?.replace(/\D/g, "") || "79066589133";
+              contractor.phone?.replace(/\D/g, "");
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
@@ -590,7 +590,7 @@ class PaymentController {
       if (payout.status == "COMPLETED" || payout.status == "REJECTED") {
         return {
           success: true,
-          message: `💡 Невозможно осуществить выплату ${payoutId}. Сделка закрыта статусом ${payout.status}`,
+          message: `💡 Невозможно осуществить выплату ${payoutId}. Сделка закрыта статусом ${payout.status}.`,
         };
       }
 

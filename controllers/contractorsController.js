@@ -97,6 +97,7 @@ class ContractorsController {
         "city",
         "country",
         "street",
+        "memberId",
         "bankName",
         "bankAccount",
         "bankBik",
@@ -158,7 +159,7 @@ class ContractorsController {
         bankAccount,
         bankBik,
         bankCorrespondentAccount,
-
+        
         // Руководитель
         ceoFirstName,
         ceoLastName,
@@ -251,6 +252,7 @@ class ContractorsController {
         bankAccount,
         bankBik,
         bankCorrespondentAccount,
+        memberId,
 
         // Руководитель
         ceoFirstName,
@@ -304,6 +306,7 @@ class ContractorsController {
         bankName: bankName ?? contractor.bankName,
         bankAccount: bankAccount ?? contractor.bankAccount,
         bankBik: bankBik ?? contractor.bankBik,
+        memberId: memberId ?? contractor.memberId,
         bankCorrespondentAccount:
           bankCorrespondentAccount ?? contractor.bankCorrespondentAccount,
 
