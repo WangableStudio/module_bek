@@ -424,9 +424,6 @@ class PaymentController {
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
-          console.log(
-            `[TINKOFF PAYOUT] ✅ Выплата подрядчику завершена (paymentId: ${paymentId})`
-          );
         } catch (err) {
           console.error(
             `[TINKOFF PAYOUT ERROR] ❌ Ошибка выплаты подрядчику:`,
@@ -557,7 +554,17 @@ class PaymentController {
       );
 
       if (partnerId) {
-        await controller.getPayment(data.PaymentId);
+        try {
+          await controller.getPayment(data.PaymentId);
+          console.log(
+            `[TINKOFF PAYOUT] ✅ Выплата подрядчику завершена (paymentId: ${data.PaymentId})`
+          );
+        } catch (err) {
+          console.error(
+            "[TINKOFF PAYOUT ERROR] Ошибка при окончании выплаты",
+            err
+          );
+        }
       }
 
       return {
@@ -579,6 +586,9 @@ class PaymentController {
   async getPayment(payoutId) {
     try {
       const payout = await Payout.findByPk(payoutId);
+
+      if (payout.status === "COMPLETED") {
+      }
 
       const payload = {
         TerminalKey: TINKOFF_TERMINAL_KEY_E2C,
