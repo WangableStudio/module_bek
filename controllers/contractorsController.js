@@ -376,10 +376,6 @@ class ContractorsController {
         throw ApiError.badRequest("Некорректные данные подрядчика");
       }
 
-      if(contractor.partnerId){
-        throw ApiError.badRequest("Подрядчик уже зарегистрирован");
-      }
-
       console.log("regggg", TINKOFF_API_REG_URL);
 
       const accessToken = await controller.getTinkoffToken();
@@ -463,6 +459,10 @@ class ContractorsController {
       const contractor = await Contractors.findByPk(contractorId);
       if (!contractor) {
         return next(ApiError.badRequest("Подрядчик не найден"));
+      }
+
+      if (contractor.partnerId) {
+        throw ApiError.badRequest("Подрядчик уже зарегистрирован");
       }
 
       if (
