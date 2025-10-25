@@ -588,6 +588,10 @@ class PaymentController {
       const payout = await Payout.findByPk(payoutId);
 
       if (payout.status === "COMPLETED") {
+        return {
+          success: true,
+          message: `💡 Невозможно осуществить выплату ${payoutId}. Сделка закрыта`,
+        };
       }
 
       const payload = {
