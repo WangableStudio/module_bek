@@ -587,10 +587,10 @@ class PaymentController {
     try {
       const payout = await Payout.findByPk(payoutId);
 
-      if (payout.status === "COMPLETED") {
+      if (payout.status == "COMPLETED" || payout.status == "REJECTED") {
         return {
           success: true,
-          message: `💡 Невозможно осуществить выплату ${payoutId}. Сделка закрыта`,
+          message: `💡 Невозможно осуществить выплату ${payoutId}. Сделка закрыта статусом ${payout.status}`,
         };
       }
 
