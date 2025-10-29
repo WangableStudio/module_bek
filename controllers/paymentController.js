@@ -321,8 +321,6 @@ class PaymentController {
           },
         },
         InvoiceId: payment.id,
-        AccountId: payment.customerId || "unknown",
-        EmailCompany: CLOUDPAYMENTS_EMAIL_FROM,
       };
 
       const auth = Buffer.from(
