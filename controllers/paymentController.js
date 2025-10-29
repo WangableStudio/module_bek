@@ -495,10 +495,10 @@ class PaymentController {
               CONTRACTOR_TYPES.LEGAL_ENTITY,
             ].includes(contractor.type)
           ) {
-            // payoutPayload.memberId = "100000000012";
-            // payoutPayload.phone = "79066589133";
-            payoutPayload.memberId = contractor.memberId;
-            payoutPayload.phone = contractor.phone?.replace(/\D/g, "");
+            payoutPayload.memberId = "100000000012";
+            payoutPayload.phone = "79066589133";
+            // payoutPayload.memberId = contractor.memberId;
+            // payoutPayload.phone = contractor.phone?.replace(/\D/g, "");
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
