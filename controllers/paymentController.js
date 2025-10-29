@@ -263,7 +263,7 @@ class PaymentController {
       } else if (newStatus === "CONFIRMED") {
         try {
           await controller.executePayouts(PaymentId);
-          await controller.sendFiscalReceipt(PaymentId)
+          await controller.sendFiscalReceipt(PaymentId);
         } catch (err) {
           console.error("[TINKOFF PAYOUTS] Ошибка в executePayouts:", err);
         }
@@ -284,6 +284,13 @@ class PaymentController {
           as: "contractor",
         },
       });
+
+      if (!payment) {
+        throw ApiError.badRequest(`Платёж с ID ${paymentId} не найден`);
+      }
+
+      const totalAmount =
+        Number(payment.companyAmount) + Number(payment.contractorAmount);
       // Авторизация (Basic Auth)
       const receipt = {
         Inn: "232910520874", // ИНН твоего юрлица
@@ -292,18 +299,18 @@ class PaymentController {
           Items: [
             {
               label: "Компанию", // описание услуги
-              price: payment.companyAmount,
+              price: Number(payment.companyAmount),
               quantity: 1,
-              amount: payment.companyAmount,
+              amount: Number(payment.companyAmount),
               vat: 0,
               method: 4,
               object: 4,
             },
             {
               label: "Подрядчику",
-              price: payment.contractorAmount,
+              price: Number(payment.contractorAmount),
               quantity: 1,
-              amount: payment.contractorAmount,
+              amount: Number(payment.contractorAmount),
               vat: 0,
               method: 4,
               object: 4,
@@ -314,13 +321,11 @@ class PaymentController {
           email: payment.contractor.email, // кому отправить чек
           phone: payment.contractor.phone.replace(/[^\d+]/g, ""),
           amounts: {
-            electronic: payment.totalAmount,
-            advancePayment: 0,
-            credit: 0,
-            provision: 0,
+            electronic: totalAmount,
           },
         },
         InvoiceId: payment.id,
+        EmailCompany: CLOUDPAYMENTS_EMAIL_FROM,
       };
 
       const auth = Buffer.from(
@@ -340,13 +345,18 @@ class PaymentController {
       );
 
       console.log("✅ Чек успешно отправлен:", response.data);
-      return res.json(response.data);
+
+      if (!response.data.Success) {
+        console.error("⚠️ Ошибка CloudKassir:", response.data.Message);
+      }
+
+      return response.data;
     } catch (error) {
       console.error(
         "❌ Ошибка при отправке чека:",
         error.response?.data || error.message
       );
-      return next(ApiError.badRequest("Ошибка при получение чека:", error));
+      throw error;
     }
   }
 
