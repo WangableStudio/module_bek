@@ -272,6 +272,78 @@ class PaymentController {
     }
   }
 
+  async sendFiscalReceipt(req, res, next) {
+    try {
+      // Авторизация (Basic Auth)
+      const auth = {
+        username: "pk_070bd1223ae9bbb19e10efae333fb", // Public ID
+        password: "907d65f950fea6a511346b26c35821f2", // Пароль для API из личного кабинета
+      };
+
+      // Тело запроса
+      const data = {
+        Inn: "232910520874", // ИНН твоей компании
+        Type: "Income", // Приход (чек при оплате)
+        CustomerReceipt: {
+          Items: [
+            {
+              label: "Компанию",
+              price: 15000,
+              quantity: 1,
+              amount: 15000,
+              vat: 0, // НДС не облагается
+              method: 4, // полный расчёт
+              object: 4, // услуга
+            },
+            {
+              label: "Подрядчику",
+              price: 2500,
+              quantity: 1,
+              amount: 2500,
+              vat: 0,
+              method: 4,
+              object: 11, // агентское вознаграждение
+            },
+          ],
+
+          // Система налогообложения (например, УСН Доход)
+          taxationSystem: 1,
+
+          // Контакты клиента (чтобы CloudKassir отправил чек)
+          email: "wangable404@gmail.com",
+
+          // Общая сумма
+          amounts: {
+            electronic: 17500, // сумма оплаты
+          },
+
+          // Дополнительно (можно опустить)
+          isBso: false,
+          isInternetPayment: true,
+        },
+
+        // Необязательные поля
+        InvoiceId: "ORDER-2025-0001", // номер заказа
+      };
+
+      // Отправка запроса
+      const response = await axios.post(
+        "https://api.cloudpayments.ru/kkt/receipt",
+        data,
+        { auth }
+      );
+
+      console.log("✅ Чек успешно отправлен:", response.data);
+      return res.json(response.data);
+    } catch (error) {
+      console.error(
+        "❌ Ошибка при отправке чека:",
+        error.response?.data || error.message
+      );
+      return next(ApiError.badRequest('Ошибка при получение чека:', error))
+    }
+  }
+
   // ✅ Подтверждение платежа
   async confirmPayment(paymentId) {
     try {
@@ -419,8 +491,7 @@ class PaymentController {
             // payoutPayload.memberId = "100000000012";
             // payoutPayload.phone = "79066589133";
             payoutPayload.memberId = contractor.memberId;
-            payoutPayload.phone =
-              contractor.phone?.replace(/\D/g, "");
+            payoutPayload.phone = contractor.phone?.replace(/\D/g, "");
           }
 
           results.contractor = await controller.sendPayout(payoutPayload);
