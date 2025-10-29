@@ -15,6 +15,9 @@ const {
   TINKOFF_TERMINAL_KEY_E2C,
   BACKEND_URL,
   NODE_ENV,
+  CLOUDPAYMENTS_PUBLIC_ID,
+  CLOUDPAYMENTS_API_SECRET,
+  CLOUDPAYMENTS_EMAIL_FROM,
 } = process.env;
 const TINKOFF_PASSWORD = "gP3PIYw*xe5L#$9G";
 
@@ -260,6 +263,7 @@ class PaymentController {
       } else if (newStatus === "CONFIRMED") {
         try {
           await controller.executePayouts(PaymentId);
+          await controller.sendFiscalReceipt(PaymentId)
         } catch (err) {
           console.error("[TINKOFF PAYOUTS] Ошибка в executePayouts:", err);
         }
@@ -272,65 +276,69 @@ class PaymentController {
     }
   }
 
-  async sendFiscalReceipt(req, res, next) {
+  async sendFiscalReceipt(paymentId) {
     try {
+      const payment = await Payment.findByPk(paymentId, {
+        include: {
+          model: Contractors,
+          as: "contractor",
+        },
+      });
       // Авторизация (Basic Auth)
-      const auth = {
-        username: "pk_070bd1223ae9bbb19e10efae333fb", // Public ID
-        password: "907d65f950fea6a511346b26c35821f2", // Пароль для API из личного кабинета
-      };
-
-      // Тело запроса
-      const data = {
-        Inn: "232910520874", // ИНН твоей компании
-        Type: "Income", // Приход (чек при оплате)
+      const receipt = {
+        Inn: "232910520874", // ИНН твоего юрлица
+        Type: "Income", // Тип операции: Income = приход
         CustomerReceipt: {
           Items: [
             {
-              label: "Компанию",
-              price: 15000,
+              label: "Компанию", // описание услуги
+              price: payment.companyAmount,
               quantity: 1,
-              amount: 15000,
-              vat: 0, // НДС не облагается
-              method: 4, // полный расчёт
-              object: 4, // услуга
+              amount: payment.companyAmount,
+              vat: 0,
+              method: 4,
+              object: 4,
             },
             {
               label: "Подрядчику",
-              price: 2500,
+              price: payment.contractorAmount,
               quantity: 1,
-              amount: 2500,
+              amount: payment.contractorAmount,
               vat: 0,
               method: 4,
-              object: 11, // агентское вознаграждение
+              object: 4,
             },
           ],
-
-          // Система налогообложения (например, УСН Доход)
-          taxationSystem: 1,
-
-          // Контакты клиента (чтобы CloudKassir отправил чек)
-          email: "wangable404@gmail.com",
-
-          // Общая сумма
+          calculationPlace: "https://www.mbk.company",
+          taxationSystem: 1, // 1 = УСН Доход
+          email: payment.contractor.email, // кому отправить чек
+          phone: payment.contractor.phone.replace(/[^\d+]/g, ""),
           amounts: {
-            electronic: 17500, // сумма оплаты
+            electronic: payment.totalAmount,
+            advancePayment: 0,
+            credit: 0,
+            provision: 0,
           },
-
-          // Дополнительно (можно опустить)
-          isBso: false,
-          isInternetPayment: true,
         },
-
-        // Необязательные поля
-        InvoiceId: "ORDER-2025-0001", // номер заказа
+        InvoiceId: payment.id,
+        AccountId: payment.customerId || "unknown",
+        EmailCompany: CLOUDPAYMENTS_EMAIL_FROM,
       };
+
+      const auth = Buffer.from(
+        `${CLOUDPAYMENTS_PUBLIC_ID}:${CLOUDPAYMENTS_API_SECRET}`
+      ).toString("base64");
 
       // Отправка запроса
       const response = await axios.post(
         "https://api.cloudpayments.ru/kkt/receipt",
-        data,
-        { auth }
+        receipt,
+        {
+          headers: {
+            Authorization: `Basic ${auth}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       console.log("✅ Чек успешно отправлен:", response.data);
@@ -340,7 +348,7 @@ class PaymentController {
         "❌ Ошибка при отправке чека:",
         error.response?.data || error.message
       );
-      return next(ApiError.badRequest('Ошибка при получение чека:', error))
+      return next(ApiError.badRequest("Ошибка при получение чека:", error));
     }
   }
 
@@ -391,6 +399,7 @@ class PaymentController {
       // Выплаты
       try {
         await controller.executePayouts(paymentId);
+        await controller.sendFiscalReceipt(paymentId);
       } catch (payoutErr) {
         console.error(
           `[TINKOFF PAYOUT ERROR] Ошибка при выплате:`,
