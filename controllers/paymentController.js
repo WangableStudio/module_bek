@@ -74,10 +74,10 @@ class PaymentController {
           CONTRACTOR_TYPES.LEGAL_ENTITY,
         ].includes(contractorRecord.type)
       ) {
-        console.log('Проходим регистратцию');
+        console.log("Проходим регистратцию");
         await axios.post(`${BACKEND_URL}/api/v1/contractors/register`, {
           contractorId: contractorRecord.id,
-        })
+        });
         await contractorRecord.reload();
       }
 
@@ -712,10 +712,13 @@ class PaymentController {
         );
       }
 
-      await Payout.update({
-        status: data.Status,
-        responseData: { ...payout.responseData, complated: { data } },
-      });
+      await payout.update(
+        {
+          status: data.Status,
+          responseData: { ...payout.responseData, complated: data },
+        },
+        { where: { id: payoutId } }
+      );
 
       return data;
     } catch (err) {
