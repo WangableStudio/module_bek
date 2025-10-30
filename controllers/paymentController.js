@@ -72,7 +72,7 @@ class PaymentController {
           CONTRACTOR_TYPES.IP,
           CONTRACTOR_TYPES.OOO,
           CONTRACTOR_TYPES.LEGAL_ENTITY,
-        ].includes(contractor.type)
+        ].includes(contractorRecord.type)
       ) {
         console.log('Проходим регистратцию');
         await controller.registerContractor(contractorRecord);
