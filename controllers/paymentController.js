@@ -75,7 +75,9 @@ class PaymentController {
         ].includes(contractorRecord.type)
       ) {
         console.log('Проходим регистратцию');
-        await controller.registerContractor(contractorRecord);
+        await axios.post(`${BACKEND_URL}/api/v1/contractors/register`, {
+          contractorId: contractorRecord.id,
+        })
         await contractorRecord.reload();
       }
 
