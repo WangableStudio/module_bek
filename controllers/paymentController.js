@@ -857,10 +857,7 @@ class PaymentController {
     try {
       const { orderId } = req.params;
       const payment = await Payment.findOne({ where: { orderId: orderId } });
-      const payout = await Payout.findOne({
-        where: { dealId: payment.dealId },
-      });
-      return res.json({ payout, payment });
+      return res.json(payment);
     } catch (err) {
       console.error(err);
       return next(ApiError.badRequest("Ошибка при получение платежа"));
