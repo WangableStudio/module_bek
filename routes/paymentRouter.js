@@ -10,8 +10,8 @@ router.post('/payout', paymentController.payout);
 router.post('/payment', paymentController.payment);
 router.post('/GetSbpMembers', paymentController.GetSbpMembers);
 router.post('/giveCheck', paymentController.sendFiscalReceipt)
+router.get('/', paymentController.getAll);
 router.get('/:orderId', paymentController.getPaymentByOrderId)
-router.get('/all', paymentController.getAll);
 router.get('/state/:paymentId/:type', paymentController.getState);
 
 module.exports = router;

@@ -114,7 +114,7 @@ const Payment = sequelize.define("payment", {
   totalAmount: { type: DataTypes.DECIMAL(15, 2) },
   items: { type: DataTypes.JSON },
   responseData: { type: DataTypes.JSON },
-  dealId: { type: DataTypes.STRING },
+  dealId: { type: DataTypes.BIGINT },
   isConfirmed: { type: DataTypes.BOOLEAN, defaultValue: false },
   isPaidOut: { type: DataTypes.BOOLEAN, defaultValue: false },
   paymentMethod: { type: DataTypes.STRING, defaultValue: "SBP" },
