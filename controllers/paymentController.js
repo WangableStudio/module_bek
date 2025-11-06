@@ -297,6 +297,11 @@ class PaymentController {
         0
       );
 
+      console.log(totalItems);
+      console.log(payment.items);
+      
+      
+
       const companyAmount = totalItems + payment.commission;
 
       const totalAmount =
