@@ -387,12 +387,6 @@ class ContractorsController {
         throw ApiError.badRequest("Не удалось получить токен");
       }
 
-      let okved = contractor.okved;
-      if (typeof okved === "string") {
-        // разбиваем по пробелам, запятым или точкам с запятыми
-        okved = okved.split(/[\s,;]+/).filter(Boolean); // удаляем пустые элементы
-      }
-
       const payload = {
         serviceProviderEmail: SERVICE_PROVIDER_EMAIL,
         billingDescriptor: contractor.name,
@@ -400,7 +394,7 @@ class ContractorsController {
         name: contractor.name,
         inn: contractor.inn,
         kpp: contractor.kpp || "000000000",
-        okved: okved,
+        okved: contractor.okved,
         ogrn: parseInt(contractor.ogrn) || 0,
         email: contractor.email,
         siteUrl: BACKEND_URL,

@@ -105,6 +105,18 @@ class PaymentController {
         );
       }
 
+      const sbpPayloud = {
+        TerminalKey: TINKOFF_TERMINAL_KEY,
+        PaymentId: data.PaymentId,
+        DataType: "PAYLOAD",
+      };
+
+      sbpPayloud.Token = createTinkoffToken(sbpPayloud);
+
+      const sbp = await axios.post(`${TINKOFF_API_URL}/v2/GetQr`, sbpPayloud);
+
+      console.log(sbp.data);
+
       await Payment.create({
         id: data.PaymentId,
         orderId,
@@ -332,7 +344,6 @@ class PaymentController {
           },
         },
         InvoiceId: payment.id,
-        EmailCompany: CLOUDPAYMENTS_EMAIL_FROM,
       };
 
       const auth = Buffer.from(
