@@ -286,24 +286,17 @@ class PaymentController {
           as: "contractor",
         },
       });
-      console.log(payment);
 
       if (!payment) {
         throw ApiError.badRequest(`Платёж с ID ${paymentId} не найден`);
       }
 
       const totalItems = payment.items.reduce(
-        (sum, item) => sum + item.amount,
+        (sum, item) => sum + Number(item.amount),
         0
       );
 
-      console.log(totalItems);
-      console.log(payment.items);
-      
-      
-
-      const companyAmount = totalItems + payment.commission;
-
+      const companyAmount = Number(totalItems) + Number(payment.commission);
       const totalAmount =
         Number(companyAmount) + Number(payment.contractorAmount);
       // Авторизация (Basic Auth)
