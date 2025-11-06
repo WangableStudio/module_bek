@@ -277,9 +277,8 @@ class PaymentController {
     }
   }
 
-  async sendFiscalReceipt(req, res, next) {
+  async sendFiscalReceipt(paymentId) {
     try {
-      const { paymentId } = req.body;
       const payment = await Payment.findByPk(paymentId, {
         include: {
           model: Contractors,
