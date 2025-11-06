@@ -277,20 +277,22 @@ class PaymentController {
     }
   }
 
-  async sendFiscalReceipt(paymentId) {
+  async sendFiscalReceipt(req, res, next) {
     try {
+      const { paymentId } = req.body;
       const payment = await Payment.findByPk(paymentId, {
         include: {
           model: Contractors,
           as: "contractor",
         },
       });
+      console.log(payment);
 
       if (!payment) {
         throw ApiError.badRequest(`Платёж с ID ${paymentId} не найден`);
       }
 
-      const totalItems = payment.items.fruits.reduce(
+      const totalItems = payment.items.reduce(
         (sum, item) => sum + item.amount,
         0
       );
