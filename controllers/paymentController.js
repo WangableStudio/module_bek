@@ -47,41 +47,34 @@ class PaymentController {
   // 🧩 Создание платёжной ссылки
   async init(req, res, next) {
     try {
-      const {
-        contractor,
-        commission,
-        companyAmount,
-        contractorAmount,
-        items,
-        totalAmount,
-      } = req.body;
+      const { commission, contractorAmount, items, totalAmount } = req.body;
 
-      if (!contractor?.id) {
-        return next(ApiError.badRequest("Подрядчик не указан"));
-      }
+      // if (!contractor?.id) {
+      //   return next(ApiError.badRequest("Подрядчик не указан"));
+      // }
 
-      const contractorRecord = await Contractors.findByPk(contractor.id);
-      if (!contractorRecord) {
-        return next(ApiError.badRequest("Подрядчик не найден"));
-      }
+      // const contractorRecord = await Contractors.findByPk(contractor.id);
+      // if (!contractorRecord) {
+      //   return next(ApiError.badRequest("Подрядчик не найден"));
+      // }
 
-      // Для СБП регистрируем подрядчика только если нужно (не требуется для физлиц)
-      if (
-        !contractorRecord.partnerId &&
-        [
-          CONTRACTOR_TYPES.IP,
-          CONTRACTOR_TYPES.OOO,
-          CONTRACTOR_TYPES.LEGAL_ENTITY,
-        ].includes(contractorRecord.type)
-      ) {
-        console.log("Проходим регистратцию");
-        await axios.post(`${BACKEND_URL}/api/v1/contractors/register`, {
-          contractorId: contractorRecord.id,
-        });
-        await contractorRecord.reload();
-      }
+      // // Для СБП регистрируем подрядчика только если нужно (не требуется для физлиц)
+      // if (
+      //   !contractorRecord.partnerId &&
+      //   [
+      //     CONTRACTOR_TYPES.IP,
+      //     CONTRACTOR_TYPES.OOO,
+      //     CONTRACTOR_TYPES.LEGAL_ENTITY,
+      //   ].includes(contractorRecord.type)
+      // ) {
+      //   console.log("Проходим регистратцию");
+      //   await axios.post(`${BACKEND_URL}/api/v1/contractors/register`, {
+      //     contractorId: contractorRecord.id,
+      //   });
+      //   await contractorRecord.reload();
+      // }
 
-      const cleanedPhone = contractorRecord.phone.replace(/[^\d+]/g, "");
+      const cleanedPhone = "+79606747611";
       const orderId = `order-${Date.now()}`;
       const amountInKopecks = Math.round(totalAmount * 100);
 
@@ -89,16 +82,9 @@ class PaymentController {
         TerminalKey: TINKOFF_TERMINAL_KEY,
         Amount: amountInKopecks,
         OrderId: orderId,
-        Description: `Оплата услуг: ${contractorRecord.name}${
-          contractorRecord.inn ? ` (ИНН ${contractorRecord.inn})` : ""
-        }`,
         CreateDealWithType: "NN",
         PaymentRecipientId: cleanedPhone,
         NotificationURL: `${BACKEND_URL}/api/v1/payment/notification`,
-        DATA: {
-          Phone: cleanedPhone,
-          Email: contractorRecord.email || "",
-        },
       };
 
       payload.Token = createTinkoffToken(payload);
@@ -124,9 +110,7 @@ class PaymentController {
         orderId,
         paymentUrl: data.PaymentURL,
         status: data.Status,
-        contractorId: contractorRecord.id,
         commission,
-        companyAmount,
         contractorAmount,
         totalAmount,
         items,
@@ -267,14 +251,15 @@ class PaymentController {
         } catch (err) {
           console.error("[TINKOFF CONFIRM] Ошибка в confirmPayment:", err);
         }
-      } else if (newStatus === "CONFIRMED") {
-        try {
-          await controller.executePayouts(PaymentId);
-          await controller.sendFiscalReceipt(PaymentId);
-        } catch (err) {
-          console.error("[TINKOFF PAYOUTS] Ошибка в executePayouts:", err);
-        }
       }
+      //  if (newStatus === "CONFIRMED") {
+      //   try {
+      //     await controller.executePayouts(PaymentId);
+      //     await controller.sendFiscalReceipt(PaymentId);
+      //   } catch (err) {
+      //     console.error("[TINKOFF PAYOUTS] Ошибка в executePayouts:", err);
+      //   }
+      // }
 
       return res.send("OK");
     } catch (err) {
@@ -296,8 +281,15 @@ class PaymentController {
         throw ApiError.badRequest(`Платёж с ID ${paymentId} не найден`);
       }
 
+      const totalItems = payment.items.fruits.reduce(
+        (sum, item) => sum + item.amount,
+        0
+      );
+
+      const companyAmount = totalItems + payment.commission;
+
       const totalAmount =
-        Number(payment.companyAmount) + Number(payment.contractorAmount);
+        Number(companyAmount) + Number(payment.contractorAmount);
       // Авторизация (Basic Auth)
       const receipt = {
         Inn: "232910520874", // ИНН твоего юрлица
@@ -306,9 +298,9 @@ class PaymentController {
           Items: [
             {
               label: "Компанию", // описание услуги
-              price: Number(payment.companyAmount),
+              price: Number(companyAmount),
               quantity: 1,
-              amount: Number(payment.companyAmount),
+              amount: Number(companyAmount),
               vat: 0,
               method: 4,
               object: 4,
@@ -411,16 +403,16 @@ class PaymentController {
         `[TINKOFF CONFIRM] ✅ Платеж ${paymentId} успешно подтвержден`
       );
 
-      // Выплаты
-      try {
-        await controller.executePayouts(paymentId);
-        await controller.sendFiscalReceipt(paymentId);
-      } catch (payoutErr) {
-        console.error(
-          `[TINKOFF PAYOUT ERROR] Ошибка при выплате:`,
-          payoutErr.message
-        );
-      }
+      // // Выплаты
+      // try {
+      //   await controller.executePayouts(paymentId);
+      //   await controller.sendFiscalReceipt(paymentId);
+      // } catch (payoutErr) {
+      //   console.error(
+      //     `[TINKOFF PAYOUT ERROR] Ошибка при выплате:`,
+      //     payoutErr.message
+      //   );
+      // }
 
       return { success: true, status: data.Status };
     } catch (err) {
@@ -433,14 +425,9 @@ class PaymentController {
   }
 
   // ✅ Выполнение выплат
-  async executePayouts(paymentId) {
+  async executePayouts(paymentId, contractorId) {
     try {
-      const payment = await Payment.findByPk(paymentId, {
-        include: {
-          model: Contractors,
-          as: "contractor",
-        },
-      });
+      const payment = await Payment.findByPk(paymentId);
 
       if (!payment) {
         throw ApiError.badRequest(`Платеж с ID ${paymentId} не найден`);
@@ -461,7 +448,7 @@ class PaymentController {
         );
       }
 
-      const contractor = payment.contractor;
+      const contractor = await Contractors.findByPk(contractorId);
       if (!contractor) {
         throw ApiError.badRequest(
           `Подрядчик не найден для платежа ${paymentId}`
@@ -560,7 +547,10 @@ class PaymentController {
       await payment.update({
         isPaidOut: true,
         paymentMethod,
+        contractorId: contractor.id
       });
+
+      await controller.sendFiscalReceipt(paymentId);
 
       console.log(
         `[TINKOFF PAYOUTS] 🎉 Все выплаты завершены для платежа ${paymentId}`
@@ -763,13 +753,13 @@ class PaymentController {
   // 💸 Ручной запуск выплат
   async payout(req, res, next) {
     try {
-      const { paymentId } = req.body;
+      const { paymentId, contractorId, method } = req.body;
 
       if (!paymentId) {
         return next(ApiError.badRequest("ID платежа не указан"));
       }
 
-      const payout = await controller.executePayouts(paymentId);
+      const payout = await controller.executePayouts(paymentId, contractorId, method);
 
       return res.json(payout);
     } catch (err) {

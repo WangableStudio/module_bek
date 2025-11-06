@@ -110,7 +110,6 @@ const Payment = sequelize.define("payment", {
   paymentUrl: { type: DataTypes.STRING },
   status: { type: DataTypes.STRING },
   commission: { type: DataTypes.DECIMAL(15, 2) },
-  companyAmount: { type: DataTypes.DECIMAL(15, 2) },
   contractorAmount: { type: DataTypes.DECIMAL(15, 2) },
   totalAmount: { type: DataTypes.DECIMAL(15, 2) },
   items: { type: DataTypes.JSON },
@@ -125,7 +124,7 @@ const Payment = sequelize.define("payment", {
       model: Contractors,
       key: "id",
     },
-    allowNull: false,
+    allowNull: true,
   },
 });
 
