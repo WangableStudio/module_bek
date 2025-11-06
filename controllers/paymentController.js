@@ -1,5 +1,7 @@
 const crypto = require("crypto");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const {
   Payment,
@@ -525,7 +527,35 @@ class PaymentController {
             break;
 
           case "card":
-            // TODO: реализовать выплату на карту
+            // 📦 1. Загружаем публичный ключ
+            const publicKeyPath = path.resolve("ssl", "carddata_public.pem");
+
+            // Проверяем, что ключ существует
+            if (!fs.existsSync(publicKeyPath)) {
+              throw ApiError.internal(
+                "Файл carddata_public.pem не найден в /ssl"
+              );
+            }
+
+            const publicKey = fs.readFileSync(publicKeyPath, "utf8");
+
+            // 💳 2. Собираем данные карты (можно брать из базы contractor)
+            const cardDataRaw =
+              "PAN=4300000000000777;ExpDate=0523;CardHolder=IVAN PETROV;CVV=111";
+
+            // 🔐 3. Шифруем RSA + Base64
+            const encrypted = crypto.publicEncrypt(
+              {
+                key: publicKey,
+                padding: crypto.constants.RSA_PKCS1_PADDING,
+              },
+              Buffer.from(cardDataRaw, "utf8")
+            );
+
+            const base64CardData = encrypted.toString("base64");
+
+            // 📨 4. Добавляем в тело запроса
+            payoutPayload.CardData = base64CardData;
             break;
 
           default:
