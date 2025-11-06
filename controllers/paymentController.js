@@ -434,23 +434,19 @@ class PaymentController {
   }
 
   // ✅ Выполнение выплат
-  async executePayouts(paymentId, contractorId) {
+  async executePayouts(paymentId, contractorId, payoutMethod) {
     try {
       const payment = await Payment.findByPk(paymentId);
-
       if (!payment) {
         throw ApiError.badRequest(`Платеж с ID ${paymentId} не найден`);
       }
-
       if (payment.isPaidOut) {
-        // console.log(`[TINKOFF PAYOUTS] 💡 Платеж ${paymentId} уже выплачен`);
         return {
           success: true,
           alreadyPaidOut: true,
           message: `💡 Платеж ${paymentId} уже выплачен`,
         };
       }
-
       if (!payment.dealId) {
         throw ApiError.badRequest(
           `DealId отсутствует для платежа ${paymentId}`
@@ -464,7 +460,7 @@ class PaymentController {
         );
       }
 
-      const partnerId = contractor.partnerId;
+      const { partnerId, type } = contractor;
 
       if (
         !partnerId &&
@@ -472,48 +468,61 @@ class PaymentController {
           CONTRACTOR_TYPES.IP,
           CONTRACTOR_TYPES.OOO,
           CONTRACTOR_TYPES.LEGAL_ENTITY,
-        ].includes(contractor.type)
+        ].includes(type)
       ) {
         throw ApiError.badRequest(
-          `PartnerId отсутствует для подрядчика ${contractor.id} (${contractor.type})`
+          `PartnerId отсутствует для подрядчика ${contractor.id} (${type})`
         );
       }
 
-      const results = { contractor: null, company: null };
+      const results = {};
 
-      // Выплата подрядчику
       if (payment.contractorAmount > 0) {
+        const payoutPayload = {
+          paymentId: payment.id,
+          dealId: payment.dealId,
+          amount: payment.contractorAmount,
+          type: "contractor",
+          finalPayout: true,
+        };
+
+        switch (payoutMethod) {
+          case "partnerId":
+            if (
+              ![
+                CONTRACTOR_TYPES.INDIVIDUAL,
+                CONTRACTOR_TYPES.SELF_EMPLOYED,
+              ].includes(type)
+            ) {
+              payoutPayload.partnerId = partnerId;
+            }
+            break;
+
+          case "memberId":
+            if (
+              ![
+                CONTRACTOR_TYPES.IP,
+                CONTRACTOR_TYPES.OOO,
+                CONTRACTOR_TYPES.LEGAL_ENTITY,
+              ].includes(type)
+            ) {
+              payoutPayload.memberId = contractor.memberId ?? "100000000012";
+              payoutPayload.phone =
+                contractor.phone?.replace(/\D/g, "") ?? "79066589133";
+            }
+            break;
+
+          case "card":
+            // TODO: реализовать выплату на карту
+            break;
+
+          default:
+            throw ApiError.badRequest(
+              `Неизвестный метод выплаты: ${payoutMethod}`
+            );
+        }
+
         try {
-          const payoutPayload = {
-            paymentId: payment.id,
-            dealId: payment.dealId,
-            amount: payment.contractorAmount,
-            type: "contractor",
-            finalPayout: true,
-          };
-
-          if (
-            ![
-              CONTRACTOR_TYPES.INDIVIDUAL,
-              CONTRACTOR_TYPES.SELF_EMPLOYED,
-            ].includes(contractor.type)
-          ) {
-            payoutPayload.partnerId = contractor.partnerId;
-          }
-
-          if (
-            ![
-              CONTRACTOR_TYPES.IP,
-              CONTRACTOR_TYPES.OOO,
-              CONTRACTOR_TYPES.LEGAL_ENTITY,
-            ].includes(contractor.type)
-          ) {
-            payoutPayload.memberId = "100000000012";
-            payoutPayload.phone = "79066589133";
-            // payoutPayload.memberId = contractor.memberId;
-            // payoutPayload.phone = contractor.phone?.replace(/\D/g, "");
-          }
-
           results.contractor = await controller.sendPayout(payoutPayload);
         } catch (err) {
           console.error(
@@ -524,38 +533,9 @@ class PaymentController {
         }
       }
 
-      // // Выплата компании
-      // if (payment.companyAmount > 0) {
-      //   try {
-      //     results.company = await this.sendPayout({
-      //       paymentId: payment.id,
-      //       dealId: payment.dealId,
-      //       partnerId: COMPANY_PARTNER_ID,
-      //       amount: payment.companyAmount,
-      //       type: "company",
-      //       finalPayout: true,
-      //     });
-      //     console.log(
-      //       `[TINKOFF PAYOUT] ✅ Выплата компании завершена (paymentId: ${paymentId})`
-      //     );
-      //   } catch (err) {
-      //     console.error(
-      //       `[TINKOFF PAYOUT ERROR] ❌ Ошибка выплаты компании:`,
-      //       err.message
-      //     );
-      //     throw ApiError.internal("Ошибка при выплате компании");
-      //   }
-      // }
-
-      let paymentMethod = "SBP"; // по дефолту
-
-      if (contractor.partnerId) {
-        paymentMethod = "Оплата картой";
-      }
-
       await payment.update({
         isPaidOut: true,
-        paymentMethod,
+        paymentMethod: payoutMethod,
         contractorId: contractor.id,
       });
 
@@ -762,7 +742,7 @@ class PaymentController {
   // 💸 Ручной запуск выплат
   async payout(req, res, next) {
     try {
-      const { paymentId, contractorId, method } = req.body;
+      const { paymentId, contractorId, payoutMethod } = req.body;
 
       if (!paymentId) {
         return next(ApiError.badRequest("ID платежа не указан"));
@@ -771,7 +751,7 @@ class PaymentController {
       const payout = await controller.executePayouts(
         paymentId,
         contractorId,
-        method
+        payoutMethod
       );
 
       return res.json(payout);
@@ -876,7 +856,6 @@ class PaymentController {
   async getPaymentByOrderId(req, res, next) {
     try {
       const { orderId } = req.params;
-      console.log(orderId);
       const payment = await Payment.findOne({ where: { orderId: orderId } });
       const payout = await Payout.findOne({
         where: { dealId: payment.dealId },
