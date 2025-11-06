@@ -121,6 +121,7 @@ class PaymentController {
         id: data.PaymentId,
         orderId,
         paymentUrl: data.PaymentURL,
+        sbpUrl: sbp.data?.Data,
         status: data.Status,
         commission,
         contractorAmount,
@@ -134,7 +135,7 @@ class PaymentController {
 
       return res.json({
         success: true,
-        paymentUrl: data.PaymentURL,
+        paymentUrl: sbp.data?.Data,
         orderId,
         status: data.Status,
         paymentId: data.PaymentId,

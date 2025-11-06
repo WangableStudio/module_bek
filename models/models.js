@@ -108,6 +108,7 @@ const Payment = sequelize.define("payment", {
   id: { type: DataTypes.BIGINT, primaryKey: true },
   orderId: { type: DataTypes.STRING, allowNull: false },
   paymentUrl: { type: DataTypes.STRING },
+  sbpUrl: { type: DataTypes.STRING },
   status: { type: DataTypes.STRING },
   commission: { type: DataTypes.DECIMAL(15, 2) },
   contractorAmount: { type: DataTypes.DECIMAL(15, 2) },
