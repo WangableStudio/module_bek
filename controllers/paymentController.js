@@ -498,7 +498,7 @@ class PaymentController {
             }
             break;
 
-          case "memberId":
+          case "sbp":
             if (
               ![
                 CONTRACTOR_TYPES.IP,
