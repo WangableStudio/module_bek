@@ -134,7 +134,7 @@ class PaymentController {
     }
   }
 
-  async getAll(req, res, next){
+  async getAll(req, res, next) {
     try {
       const payments = await Payment.findAll();
       return res.json(payments);
@@ -202,7 +202,9 @@ class PaymentController {
         console.log(
           `[TINKOFF WEBHOOK] Обнаружен возможный откат ${currentStatus} → ${newStatus} для ${PaymentId}. Проверяю через GetState...`
         );
-        const stateData = await axios.get(`${BACKEND_URL}/api/v1/payment/state/${PaymentId}/default`);
+        const stateData = await axios.get(
+          `${BACKEND_URL}/api/v1/payment/state/${PaymentId}/default`
+        );
         const verifiedStatus = stateData?.status;
         if (verifiedStatus) {
           console.log(
@@ -554,7 +556,7 @@ class PaymentController {
       await payment.update({
         isPaidOut: true,
         paymentMethod,
-        contractorId: contractor.id
+        contractorId: contractor.id,
       });
 
       await controller.sendFiscalReceipt(paymentId);
@@ -766,7 +768,11 @@ class PaymentController {
         return next(ApiError.badRequest("ID платежа не указан"));
       }
 
-      const payout = await controller.executePayouts(paymentId, contractorId, method);
+      const payout = await controller.executePayouts(
+        paymentId,
+        contractorId,
+        method
+      );
 
       return res.json(payout);
     } catch (err) {
@@ -870,6 +876,7 @@ class PaymentController {
   async getPaymentByOrderId(req, res, next) {
     try {
       const { orderId } = req.params;
+      console.log(orderId);
       const payment = await Payment.findOne({ where: { orderId: orderId } });
       const payout = await Payout.findOne({
         where: { dealId: payment.dealId },
@@ -877,7 +884,7 @@ class PaymentController {
       return res.json({ payout, payment });
     } catch (err) {
       console.error(err);
-      ApiError.badRequest("Ошибка при получение платежа");
+      return next(ApiError.badRequest("Ошибка при получение платежа"));
     }
   }
 }
