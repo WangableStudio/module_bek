@@ -527,6 +527,8 @@ class PaymentController {
             break;
 
           case "card":
+            console.log("sss", payoutMethod);
+
             // 📦 1. Загружаем публичный ключ
             const publicKeyPath = path.resolve("ssl", "carddata_public.pem");
 
@@ -553,6 +555,7 @@ class PaymentController {
             );
 
             const base64CardData = encrypted.toString("base64");
+            console.log(base64CardData);
 
             // 📨 4. Добавляем в тело запроса
             payoutPayload.CardData = base64CardData;
