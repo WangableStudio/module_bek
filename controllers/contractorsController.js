@@ -74,6 +74,12 @@ class ContractorsController {
         bankBik,
         bankCorrespondentAccount,
 
+        // Данные о карте
+        pan,
+        expDate,
+        cvv,
+        cardHolder,
+
         // Руководитель
         ceoFirstName,
         ceoLastName,
@@ -159,6 +165,12 @@ class ContractorsController {
         bankAccount,
         bankBik,
         bankCorrespondentAccount,
+
+        // Данные о карте
+        pan,
+        expDate,
+        cvv,
+        cardHolder,
 
         // Руководитель
         ceoFirstName,
@@ -254,6 +266,12 @@ class ContractorsController {
         bankCorrespondentAccount,
         memberId,
 
+        // Данные о карте
+        pan,
+        expDate,
+        cvv,
+        cardHolder,
+
         // Руководитель
         ceoFirstName,
         ceoLastName,
@@ -309,6 +327,12 @@ class ContractorsController {
         memberId: memberId ?? contractor.memberId,
         bankCorrespondentAccount:
           bankCorrespondentAccount ?? contractor.bankCorrespondentAccount,
+
+        // Данные о карте
+        pan: pan ?? contractor.pan,
+        expDate: expDate ?? contractor.expDate,
+        cvv: cvv ?? contractor.cvv,
+        cardHolder: cardHolder ?? contractor.cardHolder,
 
         // Руководитель
         ceoFirstName: ceoFirstName ?? contractor.ceoFirstName,

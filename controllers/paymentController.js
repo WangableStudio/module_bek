@@ -474,7 +474,16 @@ class PaymentController {
         );
       }
 
-      const { partnerId, type, phone, memberId } = contractor;
+      const {
+        partnerId,
+        type,
+        phone,
+        memberId,
+        pan,
+        expDate,
+        cvv,
+        cardHolder,
+      } = contractor;
 
       if (
         !partnerId &&
@@ -529,6 +538,10 @@ class PaymentController {
             break;
 
           case "card":
+            if(!pan || !expDate || !cvv || !cardHolder) {
+              throw ApiError.badRequest("Недостаточно данных для выплаты по карте");
+            }
+
             const publicKeyPath = path.resolve("ssl", "carddata_public.pem");
 
             if (!fs.existsSync(publicKeyPath)) {
@@ -539,8 +552,7 @@ class PaymentController {
 
             const publicKey = fs.readFileSync(publicKeyPath, "utf8");
 
-            const cardDataRaw =
-              "PAN=4300000000000777;ExpDate=0523;CardHolder=IVAN PETROV;CVV=111";
+            const cardDataRaw = `PAN=${pan};ExpDate=${expDate};CardHolder=${cardHolder};CVV=${cvv}`;
 
             const encrypted = crypto.publicEncrypt(
               {
