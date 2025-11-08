@@ -634,6 +634,8 @@ class PaymentController {
       if (finalPayout) payload.FinalPayout = true;
       payload.Token = createTinkoffToken(payload);
 
+      console.log(TINKOFF_API_URL);
+
       console.log("[TINKOFF PAYOUT] 📤 Запрос:", payload);
 
       const { data } = await axios.post(
