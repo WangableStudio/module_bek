@@ -118,7 +118,7 @@ const Payment = sequelize.define("payment", {
   dealId: { type: DataTypes.BIGINT },
   isConfirmed: { type: DataTypes.BOOLEAN, defaultValue: false },
   isPaidOut: { type: DataTypes.BOOLEAN, defaultValue: false },
-  paymentMethod: { type: DataTypes.STRING, defaultValue: "SBP" },
+  paymentMethod: { type: DataTypes.STRING },
   contractorId: {
     type: DataTypes.UUID,
     references: {
