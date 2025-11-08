@@ -474,7 +474,7 @@ class PaymentController {
         );
       }
 
-      const { partnerId, type } = contractor;
+      const { partnerId, type, phone, memberId } = contractor;
 
       if (
         !partnerId &&
@@ -497,6 +497,7 @@ class PaymentController {
           dealId: payment.dealId,
           amount: payment.contractorAmount,
           type: "contractor",
+          PaymentRecipientId: phone.replace(/\D/g, ""),
           finalPayout: true,
         };
 
@@ -522,8 +523,8 @@ class PaymentController {
             ) {
               payoutPayload.memberId = "100000000012";
               payoutPayload.phone = "79066589133";
-              // payoutPayload.memberId = contractor.memberId;
-              // payoutPayload.phone = contractor.phone?.replace(/\D/g, "");
+              // payoutPayload.memberId = memberId;
+              // payoutPayload.phone = phone?.replace(/\D/g, "");
             }
             break;
 
@@ -603,6 +604,7 @@ class PaymentController {
     phone,
     memberId,
     CardData,
+    PaymentRecipientId,
     finalPayout = false,
   }) {
     try {
@@ -620,13 +622,12 @@ class PaymentController {
         DealId: dealId,
         Amount: amountInKopecks,
         OrderId: orderId,
-        PaymentRecipientId: "",
+        PaymentRecipientId: PaymentRecipientId,
       };
 
       if (partnerId) payload.PartnerId = partnerId;
       if (phone) {
         payload.Phone = phone;
-        payload.PaymentRecipientId = phone;
       }
       if (memberId) payload.SbpMemberId = memberId;
 
