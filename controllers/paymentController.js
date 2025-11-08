@@ -43,7 +43,6 @@ function createTinkoffToken(payload, password = TINKOFF_PASSWORD) {
   filtered.Password = password;
   const sortedKeys = Object.keys(filtered).sort();
   const concatenated = sortedKeys.map((k) => String(filtered[k])).join("");
-  console.log("TOKEN STRING:", Object.keys(filtered).sort(), concatenated);
   return crypto.createHash("sha256").update(concatenated, "utf8").digest("hex");
 }
 class PaymentController {
