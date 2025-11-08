@@ -93,6 +93,12 @@ const Contractors = sequelize.define("contractors", {
   ceoPhone: { type: DataTypes.STRING },
   ceoCountry: { type: DataTypes.STRING, defaultValue: "RUS" },
 
+  // Данные карты
+  pan: { type: DataTypes.STRING },
+  expDate: { type: DataTypes.STRING },
+  cvv: { type: DataTypes.STRING },
+  cardHolder: { type: DataTypes.STRING },
+
   partnerId: { type: DataTypes.STRING },
   memberId: {
     type: DataTypes.STRING,

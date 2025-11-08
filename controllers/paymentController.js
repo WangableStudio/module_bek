@@ -669,7 +669,7 @@ class PaymentController {
         `[TINKOFF PAYOUT] ✅ Выплата успешно создана (paymentId: ${paymentId}, type: ${type})`
       );
 
-      if (partnerId) {
+      if (partnerId || CardData) {
         try {
           await controller.getPayment(data.PaymentId);
           console.log(
