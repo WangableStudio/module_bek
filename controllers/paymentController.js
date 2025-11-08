@@ -538,8 +538,10 @@ class PaymentController {
             break;
 
           case "card":
-            if(!pan || !expDate || !cvv || !cardHolder) {
-              throw ApiError.badRequest("Недостаточно данных для выплаты по карте");
+            if (!pan || !expDate || !cvv || !cardHolder) {
+              throw ApiError.badRequest(
+                "Недостаточно данных для выплаты по карте"
+              );
             }
 
             const publicKeyPath = path.resolve("ssl", "carddata_public.pem");
@@ -602,6 +604,9 @@ class PaymentController {
         `[TINKOFF PAYOUTS ERROR] 🚨`,
         err.response?.data || err.message
       );
+      if (err instanceof ApiError) {
+        throw err;
+      }
       throw ApiError.internal("Внутренняя ошибка при выполнении выплат");
     }
   }
@@ -811,6 +816,10 @@ class PaymentController {
       return res.json(payout);
     } catch (err) {
       console.error("[PAYOUT ERROR]", err);
+      if (err instanceof ApiError) {
+        return next(err); // ← вернёт оригинальный текст ошибки
+      }
+
       return next(ApiError.internal("Ошибка при выполнении выплат"));
     }
   }
