@@ -415,6 +415,7 @@ class PaymentController {
           data.Message || "Ошибка при подтверждении платежа"
         );
       }
+      
 
       await payment.update({
         status: "CONFIRMED",
