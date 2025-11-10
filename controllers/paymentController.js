@@ -107,23 +107,23 @@ class PaymentController {
         );
       }
 
-      // const sbpPayloud = {
-      //   TerminalKey: TINKOFF_TERMINAL_KEY,
-      //   PaymentId: data.PaymentId,
-      //   DataType: "PAYLOAD",
-      // };
+      const sbpPayloud = {
+        TerminalKey: TINKOFF_TERMINAL_KEY,
+        PaymentId: data.PaymentId,
+        DataType: "PAYLOAD",
+      };
 
-      // sbpPayloud.Token = createTinkoffToken(sbpPayloud);
+      sbpPayloud.Token = createTinkoffToken(sbpPayloud);
 
-      // const sbp = await axios.post(`${TINKOFF_API_URL}/v2/GetQr`, sbpPayloud);
+      const sbp = await axios.post(`${TINKOFF_API_URL}/v2/GetQr`, sbpPayloud);
 
-      // console.log(sbp.data);
+      console.log(sbp.data);
 
       await Payment.create({
         id: data.PaymentId,
         orderId,
-        paymentUrl: data.PaymentURL,
-        // sbpUrl: sbp.data?.Data,
+        // paymentUrl: data.PaymentURL,
+        sbpUrl: sbp.data?.Data,
         status: data.Status,
         commission,
         contractorAmount,
@@ -415,7 +415,7 @@ class PaymentController {
           data.Message || "Ошибка при подтверждении платежа"
         );
       }
-      
+
 
       await payment.update({
         status: "CONFIRMED",
