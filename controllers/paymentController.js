@@ -122,7 +122,7 @@ class PaymentController {
       await Payment.create({
         id: data.PaymentId,
         orderId,
-        // paymentUrl: data.PaymentURL,
+        paymentUrl: data.PaymentURL,
         sbpUrl: sbp.data?.Data,
         status: data.Status,
         commission,
@@ -137,8 +137,8 @@ class PaymentController {
 
       return res.json({
         success: true,
-        // paymentUrl: sbp.data?.Data,
-        paymentUrl: data.PaymentURL,
+        paymentUrl: sbp.data?.Data,
+        // paymentUrl: data.PaymentURL,
         orderId,
         status: data.Status,
         paymentId: data.PaymentId,
