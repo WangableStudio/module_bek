@@ -817,7 +817,7 @@ class PaymentController {
     } catch (err) {
       console.error("[PAYOUT ERROR]", err);
       if (err instanceof ApiError) {
-        return next(err); // ← вернёт оригинальный текст ошибки
+        return next(err);
       }
 
       return next(ApiError.internal("Ошибка при выполнении выплат"));
