@@ -126,7 +126,7 @@ const Payment = sequelize.define("payment", {
   isConfirmed: { type: DataTypes.BOOLEAN, defaultValue: false },
   isPaidOut: { type: DataTypes.BOOLEAN, defaultValue: false },
   paymentMethod: { type: DataTypes.STRING },
-  clientBio: { type: DataTypes.STRING },
+  clientFio: { type: DataTypes.STRING },
   clientEmail: { type: DataTypes.STRING },
   contractorId: {
     type: DataTypes.UUID,

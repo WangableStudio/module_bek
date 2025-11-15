@@ -165,12 +165,17 @@ class PaymentController {
       const { email, fio, payment } = req.body;
 
       const paymentRecord = await Payment.findByPk(payment);
+
       if (!paymentRecord) {
         return next(ApiError.badRequest("Платеж не найден"));
       }
 
+      if (paymentRecord.isConfirmed) {
+        return next(ApiError.badRequest("Платеж уже подтвержден"));
+      }
+
       paymentRecord.clientEmail = email;
-      paymentRecord.clientBio = fio;
+      paymentRecord.clientFio = fio;
       await paymentRecord.save();
 
       return res.json(paymentRecord);
@@ -361,14 +366,14 @@ class PaymentController {
           ],
           calculationPlace: "https://www.mbk.company",
           taxationSystem: 1, // 1 = УСН Доход
-          email: payment.contractor.email, // кому отправить чек
-          phone: payment.contractor.phone.replace(/[^\d+]/g, ""),
+          email: payment.clientEmail, // кому отправить чек
           amounts: {
             electronic: totalAmount,
           },
         },
         InvoiceId: payment.id,
       };
+      // phone: payment.contractor.phone.replace(/[^\d+]/g, ""),
 
       const auth = Buffer.from(
         `${CLOUDPAYMENTS_PUBLIC_ID}:${CLOUDPAYMENTS_API_SECRET}`
