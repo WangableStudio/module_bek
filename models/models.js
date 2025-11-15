@@ -113,6 +113,7 @@ const Contractors = sequelize.define("contractors", {
 const Payment = sequelize.define("payment", {
   id: { type: DataTypes.BIGINT, primaryKey: true },
   orderId: { type: DataTypes.STRING, allowNull: false },
+  url: { type: DataTypes.STRING },
   paymentUrl: { type: DataTypes.STRING },
   sbpUrl: { type: DataTypes.STRING },
   status: { type: DataTypes.STRING },
@@ -125,6 +126,8 @@ const Payment = sequelize.define("payment", {
   isConfirmed: { type: DataTypes.BOOLEAN, defaultValue: false },
   isPaidOut: { type: DataTypes.BOOLEAN, defaultValue: false },
   paymentMethod: { type: DataTypes.STRING },
+  clientBio: { type: DataTypes.STRING },
+  clientEmail: { type: DataTypes.STRING },
   contractorId: {
     type: DataTypes.UUID,
     references: {
