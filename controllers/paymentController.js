@@ -169,11 +169,11 @@ class PaymentController {
         return next(ApiError.badRequest("Платеж не найден"));
       }
 
-      paymentRecord.email = email;
-      paymentRecord.fio = fio;
+      paymentRecord.clientEmail = email;
+      paymentRecord.clientBio = fio;
       await paymentRecord.save();
-      
-      return res.json(payment);
+
+      return res.json(paymentRecord);
     } catch (err) {
       return next(ApiError.badRequest("Ошибка при обновление данных клиента"));
     }
