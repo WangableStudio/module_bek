@@ -10,6 +10,7 @@ router.post('/payout', paymentController.payout);
 router.post('/payment', paymentController.payment);
 router.post('/GetSbpMembers', paymentController.GetSbpMembers);
 router.post('/giveCheck', paymentController.sendFiscalReceipt)
+router.post('/complate', paymentController.complate);
 router.get('/', paymentController.getAll);
 router.get('/:orderId', paymentController.getPaymentByOrderId)
 router.get('/state/:paymentId/:type', paymentController.getState);

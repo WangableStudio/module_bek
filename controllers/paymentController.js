@@ -160,6 +160,25 @@ class PaymentController {
     }
   }
 
+  async complate(req, res, next) {
+    try {
+      const { email, fio, payment } = req.body;
+
+      const paymentRecord = await Payment.findByPk(payment);
+      if (!paymentRecord) {
+        return next(ApiError.badRequest("Платеж не найден"));
+      }
+
+      paymentRecord.email = email;
+      paymentRecord.fio = fio;
+      await paymentRecord.save();
+      
+      return res.json(payment);
+    } catch (err) {
+      return next(ApiError.badRequest("Ошибка при обновление данных клиента"));
+    }
+  }
+
   // 🔔 Обработчик вебхуков (без изменений)
   async notification(req, res, next) {
     try {
@@ -416,7 +435,6 @@ class PaymentController {
           data.Message || "Ошибка при подтверждении платежа"
         );
       }
-
 
       await payment.update({
         status: "CONFIRMED",
