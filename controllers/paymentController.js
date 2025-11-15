@@ -16,6 +16,7 @@ const {
   TINKOFF_TERMINAL_KEY,
   TINKOFF_TERMINAL_KEY_E2C,
   BACKEND_URL,
+  FRONTEND_URL,
   NODE_ENV,
   CLOUDPAYMENTS_PUBLIC_ID,
   CLOUDPAYMENTS_API_SECRET,
@@ -117,11 +118,10 @@ class PaymentController {
 
       const sbp = await axios.post(`${TINKOFF_API_URL}/v2/GetQr`, sbpPayloud);
 
-      console.log(sbp.data);
-
       await Payment.create({
         id: data.PaymentId,
         orderId,
+        url: `${FRONTEND_URL}/completed.html?payment=${data.PaymentId}`,
         paymentUrl: data.PaymentURL,
         sbpUrl: sbp.data?.Data,
         status: data.Status,
@@ -137,7 +137,8 @@ class PaymentController {
 
       return res.json({
         success: true,
-        paymentUrl: sbp.data?.Data,
+        // paymentUrl: sbp.data?.Data,
+        paymentUrl: `${FRONTEND_URL}/completed.html?payment=${data.PaymentId}`,
         // paymentUrl: data.PaymentURL,
         orderId,
         status: data.Status,
