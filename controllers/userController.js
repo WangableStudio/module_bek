@@ -1,5 +1,5 @@
 const ApiError = require("../error/ApiError");
-const { User, Contractors, Payment } = require("../models/models");
+const { User, Contractors, Payment, Nomenclature } = require("../models/models");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -62,156 +62,19 @@ class UserController {
     }
   }
 
-  async paymentUrl(req, res, next) {
-    try {
-      const {
-        contractor,
-        commission,
-        companyAmount,
-        contractorAmount,
-        items,
-        totalAmount,
-      } = req.body;
+  async dashboard(req, res, next) {
+    try{
+      const payment = await Payment.findAll({where: {isPaidOut: true}});
 
-      if (!contractor?.id) {
-        return next(ApiError.badRequest("Подрядчик не указан"));
-      }
+      const totalAmount = payment.reduce((acc, item) => acc + item.totalAmount, 0);
 
-      const contractorRecord = await Contractors.findByPk(contractor.id);
-      if (!contractorRecord) {
-        return next(ApiError.badRequest("Подрядчик не найден"));
-      }
+      const contractors = await Contractors.findAll()
 
-      const cleanedPhone = contractorRecord.phone.replace(/[^\d+]/g, "");
-      const orderId = `order-${Date.now()}`;
-      const amountInKopecks = Math.round(totalAmount * 100);
+      const nomenclatures = await Nomenclature.findAll()
 
-      const payload = {
-        TerminalKey: TINKOFF_TERMINAL_KEY,
-        Amount: amountInKopecks,
-        OrderId: orderId,
-        Description: `Оплата услуг: ${contractor.name}`,
-        CreateDealWithType: "NN",
-        PaymentRecipientId: cleanedPhone,
-        NotificationURL: `${process.env.BACKEND_URL}/api/v1/user/notification`,
-        DATA: {
-          companyAmount,
-          contractorAmount,
-          commission,
-        },
-      };
-
-      // Добавляем токен
-      payload.Token = createTinkoffToken(payload, TINKOFF_PASSWORD);
-
-      console.log("[TINKOFF] Payload:", payload);
-
-      const response = await axios.post(
-        "https://rest-api-test.tinkoff.ru/v2/Init",
-        payload,
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      const data = response.data;
-      console.log("[TINKOFF RESPONSE]", data);
-
-      if (!data.Success) {
-        console.error("[TINKOFF ERROR]", data);
-        return res.status(400).json({ success: false, data });
-      }
-
-      const payment = await Payment.create({
-        id: data.PaymentId,
-        orderId,
-        paymentUrl: data.PaymentURL,
-        status: data.Status,
-        contractorId: contractorRecord.id,
-        commission,
-        companyAmount,
-        contractorAmount,
-        totalAmount,
-        items,
-        responseData: data,
-        dealId: data.SpAccumulationId || null,
-      });
-
-      console.log("[PAYMENT SAVED]", payment);
-
-      return res.json({
-        success: true,
-        paymentUrl: data.PaymentURL,
-        orderId,
-        status: data.Status,
-        paymentId: data.PaymentId,
-      });
-    } catch (err) {
-      console.error("[TINKOFF EXCEPTION]", err);
-      return next(ApiError.internal("Ошибка при создании платёжной ссылки"));
-    }
-  }
-
-  async handleNotification(req, res, next) {
-    try {
-      const notification = req.body;
-      console.log("[NOTIFICATION RECEIVED]", notification);
-
-      // Проверяем подпись
-      const receivedToken = notification.Token;
-      delete notification.Token;
-      const expectedToken = createTinkoffToken(notification, TINKOFF_PASSWORD);
-
-      if (receivedToken !== expectedToken) {
-        console.error("[NOTIFICATION] Invalid token!");
-        return res.status(400).send("Invalid token");
-      }
-
-      // Находим платеж
-      const payment = await Payment.findByPk(notification.PaymentId);
-      if (!payment) {
-        console.error(
-          "[NOTIFICATION] Payment not found:",
-          notification.PaymentId
-        );
-        return res.status(404).send("Payment not found");
-      }
-
-      // Обновляем статус
-      payment.status = notification.Status;
-
-      // Сохраняем DealId (SpAccumulationId) - ОН ОЧЕНЬ ВАЖЕН! (если есть, для будущих splits)
-      if (notification.SpAccumulationId) {
-        payment.dealId = notification.SpAccumulationId;
-      }
-
-      await payment.save();
-
-      console.log(
-        "[NOTIFICATION] Payment updated:",
-        payment.id,
-        payment.status
-      );
-
-      // Обрабатываем статусы (только логи для теста)
-      switch (notification.Status) {
-        case "AUTHORIZED":
-          console.log("[NOTIFICATION] Payment authorized (test: no confirm)");
-          // await confirmPayment(payment); // Закомментировано для теста
-          break;
-
-        case "CONFIRMED":
-          console.log("[NOTIFICATION] Payment confirmed (test: no payouts)");
-          // await initiatePayouts(payment); // Закомментировано для теста
-          break;
-
-        case "REJECTED":
-          console.error("[NOTIFICATION] Payment rejected!");
-          break;
-      }
-
-      return res.send("OK");
-    } catch (err) {
-      console.error("[NOTIFICATION ERROR]", err);
-      return res.status(500).send("Internal error");
+      return res.json({payments: payment, total: totalAmount, contractors, nomenclatures})
+    }catch(err){
+      next(ApiError.internal("Ошибка при получении платежей"));
     }
   }
 

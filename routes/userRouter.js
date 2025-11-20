@@ -5,10 +5,9 @@ const router = new Router();
 
 router.post("/create", userController.create);
 router.post("/login", userController.login);
-router.post("/split-payment", authMiddleware, userController.paymentUrl);
-router.post("/notification", userController.handleNotification);
 router.post("/auth", authMiddleware, userController.auth);
 router.get("/", userController.getAll);
+router.get('/dashboard', userController.dashboard)
 router.get("/:id", userController.getOne);
 router.put("/:id", userController.update);
 router.delete("/:id", userController.delete);
