@@ -95,7 +95,6 @@ class ContractorsController {
         "fullName",
         "billingDescriptor",
         "inn",
-        "ogrn",
         "email",
         "phone",
         "siteUrl",
