@@ -177,6 +177,11 @@ class PaymentController {
       if(!agreement){
         return next(ApiError.badRequest("Согласие не передано"));
       }
+      console.log(agreement);
+      console.log(typeof agreement);
+      console.log(req.body);
+      
+      
 
       paymentRecord.clientEmail = email;
       paymentRecord.clientFio = fio;
