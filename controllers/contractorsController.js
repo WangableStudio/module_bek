@@ -131,9 +131,6 @@ class ContractorsController {
         return next(ApiError.badRequest("Некорректные банковские реквизиты"));
       }
 
-      const user = await User.findByPk(req?.user?.id);
-      console.log(user);
-
       // Создаем подрядчика со всеми полями
       const contractor = await Contractors.create({
         // Основные данные
