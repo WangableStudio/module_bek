@@ -128,6 +128,7 @@ const Payment = sequelize.define("payment", {
   paymentMethod: { type: DataTypes.STRING },
   clientFio: { type: DataTypes.STRING },
   clientEmail: { type: DataTypes.STRING },
+  agreement: { type: DataTypes.BOOLEAN, defaultValue: false },
   contractorId: {
     type: DataTypes.UUID,
     references: {

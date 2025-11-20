@@ -162,7 +162,7 @@ class PaymentController {
 
   async complate(req, res, next) {
     try {
-      const { email, fio, payment } = req.body;
+      const { email, fio, payment, agreement } = req.body;
 
       const paymentRecord = await Payment.findByPk(payment);
 
@@ -174,8 +174,13 @@ class PaymentController {
         return next(ApiError.badRequest("Платеж уже подтвержден"));
       }
 
+      if(!agreement){
+        return next(ApiError.badRequest("Согласие не передано"));
+      }
+
       paymentRecord.clientEmail = email;
       paymentRecord.clientFio = fio;
+      paymentRecord.agreement = agreement;
       await paymentRecord.save();
 
       return res.json(paymentRecord);
