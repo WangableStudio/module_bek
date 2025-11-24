@@ -1,5 +1,10 @@
 const ApiError = require("../error/ApiError");
-const { User, Contractors, Payment, Nomenclature } = require("../models/models");
+const {
+  User,
+  Contractors,
+  Payment,
+  Nomenclature,
+} = require("../models/models");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -63,17 +68,25 @@ class UserController {
   }
 
   async dashboard(req, res, next) {
-    try{
-      const payment = await Payment.findAll({where: {isPaidOut: true}});
+    try {
+      const payment = await Payment.findAll({ where: { isPaidOut: true } });
 
-      const totalAmount = payment.reduce((acc, item) => acc + item.totalAmount, 0);
+      const totalAmount = payment.reduce(
+        (acc, item) => acc + Number(item.totalAmount),
+        0
+      );
 
-      const contractors = await Contractors.findAll()
+      const contractors = await Contractors.findAll();
 
-      const nomenclatures = await Nomenclature.findAll()
+      const nomenclatures = await Nomenclature.findAll();
 
-      return res.json({payments: payment, total: totalAmount, contractors, nomenclatures})
-    }catch(err){
+      return res.json({
+        payments: payment,
+        total: totalAmount,
+        contractors,
+        nomenclatures,
+      });
+    } catch (err) {
       next(ApiError.internal("Ошибка при получении платежей"));
     }
   }
