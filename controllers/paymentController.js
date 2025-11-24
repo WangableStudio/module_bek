@@ -443,10 +443,22 @@ class PaymentController {
       );
 
       if (!data.Success) {
-        console.error("[TINKOFF CONFIRM ERROR] ❌", data);
-        throw ApiError.badRequest(
-          data.Message || "Ошибка при подтверждении платежа"
-        );
+        if(data.Details == 'Изменение статуса недопустимо.'){
+          await payment.update({
+            status: "CONFIRMED",
+            isConfirmed: true,
+            responseData: { ...payment.responseData, confirm: data },
+          });
+          console.log(
+            `[TINKOFF CONFIRM] ✅ Платеж ${paymentId} успешно подтвержден`
+          );
+          return { success: true, status: data.Status };
+        }else{
+          console.error("[TINKOFF CONFIRM ERROR] ❌", data);
+          throw ApiError.badRequest(
+            data.Message || "Ошибка при подтверждении платежа"
+          );
+        }
       }
 
       await payment.update({
