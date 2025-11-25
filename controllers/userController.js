@@ -9,9 +9,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const axios = require("axios");
-const TINKOFF_TERMINAL_KEY = "1759332525322";
-const TINKOFF_TERMINAL_KEY_E2C = "1759332525322E2C"; // для выплат
-const TINKOFF_PASSWORD = "gP3PIYw*xe5L#$9G";
 
 const generateJwt = (id, name, login) => {
   const payload = { id, name, login };
