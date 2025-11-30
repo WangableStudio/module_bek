@@ -106,6 +106,7 @@ const Contractors = sequelize.define("contractors", {
       model: Members,
       key: "MemberId",
     },
+    allowNull: true,
   },
 });
 
