@@ -89,28 +89,27 @@ class ContractorsController {
       } = req.body;
 
       // Проверка обязательных полей
-      const requiredFields = [
-        "type",
-        "name",
-        "fullName",
-        "billingDescriptor",
-        "inn",
-        "email",
-        "phone",
-        "siteUrl",
-        "zip",
-        "city",
-        "country",
-        "street",
-        "memberId",
-        "bankName",
-        "bankAccount",
-        "bankBik",
-        "ceoFirstName",
-        "ceoLastName",
-        "ceoPhone",
-        "ceoCountry",
-      ];
+      const requiredFields = ["type", "name", "fullName", "inn", "phone"];
+
+      if (
+        type !== CONTRACTOR_TYPES.INDIVIDUAL &&
+        type !== CONTRACTOR_TYPES.SELF_EMPLOYED
+      ) {
+        requiredFields.push("ogrn");
+        requiredFields.push("kpp");
+        requiredFields.push("email");
+        requiredFields.push("zip");
+        requiredFields.push("city");
+        requiredFields.push("country");
+        requiredFields.push("bankName");
+        requiredFields.push("bankAccount");
+        requiredFields.push("bankBik");
+        requiredFields.push("memberId");
+        requiredFields.push("ceoFirstName");
+        requiredFields.push("ceoLastName");
+        requiredFields.push("ceoPhone");
+        requiredFields.push("ceoCountry");
+      }
 
       const missingFields = requiredFields.filter((field) => !req.body[field]);
       if (missingFields.length > 0) {
@@ -127,7 +126,11 @@ class ContractorsController {
       }
 
       // Валидация банковских реквизитов
-      if (!validateBankDetails(bankAccount, bankBik)) {
+      if (
+        type !== CONTRACTOR_TYPES.INDIVIDUAL &&
+        type !== CONTRACTOR_TYPES.SELF_EMPLOYED &&
+        !validateBankDetails(bankAccount, bankBik)
+      ) {
         return next(ApiError.badRequest("Некорректные банковские реквизиты"));
       }
 
